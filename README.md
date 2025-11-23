@@ -50,3 +50,4 @@ Open Command Prompt or PowerShell and run:
 
 1. git init
 2. git remote add origin https://github.com/aliyahsnts/oop-skillconnect
+3. git remote -v
