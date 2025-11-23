@@ -43,8 +43,10 @@ This guide walks you through installing Java, configuring your environment, pull
 
 Open Command Prompt or PowerShell and run:
 
-<pre> java -version
-javac -version </pre>
+<pre> 
+java -version
+javac -version 
+</pre>
 
 If both commands show version numbers, Java is installed correctly.
 
@@ -69,7 +71,7 @@ _(The above extension is not neccesary. I recommend that you have Code Runner in
 
 Clone our repository:
 
-<pre> ``` git clone https://github.com/aliyahsnts/oop-skillconnect ```</pre>
+<pre> git clone https://github.com/aliyahsnts/oop-skillconnect </pre>
 
 Then open the project folder in VS Code:
 `File → Open Folder → select your project (create a folder if you haven't already)`
