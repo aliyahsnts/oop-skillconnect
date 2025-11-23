@@ -129,7 +129,9 @@ If there are any issues, contact me for help.
 
 3. **Add** all the files / Stage your changes
    `git add .`
+
 4. Write your **commit message**
    `git commit -m "[your message here (summarize the changes you made)]"  `
+
 5. **Push** your changes to main branch
    `git push -u origin main `
