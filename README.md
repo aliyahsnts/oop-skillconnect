@@ -43,8 +43,9 @@ This guide walks you through installing Java, configuring your environment, pull
 
 Open Command Prompt or PowerShell and run:
 
-`java -version`
-`javac -version`
+<pre> ``` java -version
+javac -version ``` </pre>
+
 If both commands show version numbers, Java is installed correctly.
 
 ## 3. Install Java Extensions in VS Code (not necessary)
@@ -67,7 +68,8 @@ _(The above extension is not neccesary. I recommend that you have Code Runner in
 ## 4. Pull our Java project
 
 Clone our repository:
-` git clone https://github.com/aliyahsnts/oop-skillconnect`
+
+<pre> ``` git clone https://github.com/aliyahsnts/oop-skillconnect ```</pre>
 
 Then open the project folder in VS Code:
 `File → Open Folder → select your project (create a folder if you haven't already)`
