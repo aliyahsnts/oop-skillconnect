@@ -85,7 +85,9 @@ Option B — Using the VS Code Debug Panel
 - Select Java configuration
 - Press Start Debugging
 
-## 6. If Your Project Doesn't Run: Fix PATH Configuration _(you can ask for my help here)_
+## 6. If Your Project Doesn't Run: Fix PATH Configuration
+
+_(you can ask for my help for this step)_
 
 Sometimes VS Code or the terminal cannot find java or javac.
 
@@ -120,14 +122,14 @@ If there are any issues, contact me for help.
 
 # How to Push Your Code to Our GitHub Repo
 
-1. Make sure you have saved all your changes.
+1. Make sure you have **saved all your changes**.
 2. Check if the repo is right (output should be our repo link)
-   ` git remote -v`
-   You only need to do this once. If you are sure you are on the right repository, you don't have to do this step again.
+   `git remote -v`
+   You only need to do this **once**. If you are sure you are on the right repository, you don't have to do this step again.
 
-3. Add all the files / Stage your changes
-   ` git add .`
-4. Write your commit message
+3. **Add** all the files / Stage your changes
+   `git add .`
+4. Write your **commit message**
    `git commit -m "[your message here (summarize the changes you made)]"  `
-5. Push your changes to main branch
-   `git push -u origin main`
+5. **Push** your changes to main branch
+   `git push -u origin main `
