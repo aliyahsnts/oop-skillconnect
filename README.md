@@ -43,8 +43,8 @@ This guide walks you through installing Java, configuring your environment, pull
 
 Open Command Prompt or PowerShell and run:
 
-<pre> ``` java -version
-javac -version ``` </pre>
+<pre> java -version
+javac -version </pre>
 
 If both commands show version numbers, Java is installed correctly.
 
@@ -126,15 +126,15 @@ If there are any issues, contact me for help.
 
 1. Make sure you have **saved all your changes**.
 2. Check if the repo is right (output should be our repo link)
-   <pre> ```git remote -v ```</pre>
+   <pre> git remote -v </pre>
 
    You only need to do this **once**. If you are sure you are on the right repository, you don't have to do this step again.
 
 3. **Add** all the files / Stage your changes
-<pre> ```git add .```</pre>
+<pre> git add . </pre>
 
 4. Write your **commit message**
-<pre> ``` git commit -m "[your message here (summarize the changes you made)]"  ```</pre>
+<pre> git commit -m "[your message here (summarize the changes you made)]"  </pre>
 
 5. **Push** your changes to main branch
-<pre> ``` git push -u origin main ```</pre>
+<pre> git push -u origin main </pre>
