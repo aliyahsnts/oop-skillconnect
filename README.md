@@ -124,14 +124,15 @@ If there are any issues, contact me for help.
 
 1. Make sure you have **saved all your changes**.
 2. Check if the repo is right (output should be our repo link)
-   `git remote -v`
+   <pre> ```git remote -v ```</pre>
+
    You only need to do this **once**. If you are sure you are on the right repository, you don't have to do this step again.
 
 3. **Add** all the files / Stage your changes
-   `git add .`
+<pre> ```git add .```</pre>
 
 4. Write your **commit message**
-   `git commit -m "[your message here (summarize the changes you made)]"  `
+<pre> ``` git commit -m "[your message here (summarize the changes you made)]"  ```</pre>
 
 5. **Push** your changes to main branch
-   `git push -u origin main `
+<pre> ``` git push -u origin main ```</pre>
