@@ -124,7 +124,7 @@ If there are any issues, contact me for help.
 
 ---
 
-# How to Push Your Code to Our GitHub Repo
+# How to PUSH Your Code to Our GitHub Repo
 
 1. Make sure you have **saved all your changes**.
 2. Check if the repo is right (output should be our repo link)
@@ -132,11 +132,34 @@ If there are any issues, contact me for help.
 
    You only need to do this **once**. If you are sure you are on the right repository, you don't have to do this step again.
 
-3. **Add** all the files / Stage your changes
+3. Navigate to the root folder (to navigate out of \bin or \src)
+<pre> cd .. </pre>
+
+4. **Add** all the files / Stage your changes
 <pre> git add . </pre>
 
-4. Write your **commit message**
+5. Write your **commit message**
 <pre> git commit -m "[your message here (summarize the changes you made)]"  </pre>
 
-5. **Push** your changes to main branch
+6. **Push** your changes to main branch
 <pre> git push -u origin main </pre>
+
+# How to RUN Your Code
+
+1. Check if your path in the terminal is something like:
+<pre> PS C:\Users\User\Desktop\skillconnect\bin></pre>(it must end with \bin)
+
+2. If it ends with \bin, then just enter:
+<pre> java Main </pre>
+
+The Java program should now be running.
+
+Otherwise, if your file path does not end with \bin (for example, it ends with \src), then proceed to Step 3:
+
+3. Navigate to \bin in your terminal (for example, from \src:)
+<pre> cd ..\bin </pre>
+
+4. Finally, run the Java program.
+<pre> java Main </pre>
+
+The Java program should now be running.
