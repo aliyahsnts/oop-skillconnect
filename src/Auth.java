@@ -41,7 +41,12 @@ public class Auth {
 
         // Display user interface based on user type
         switch (user.getUserType()) {
-            case 1 -> System.out.println("Displaying Jobseeker Interface...");
+            case 1 -> {
+        System.out.println("Displaying Jobseeker Interface...");
+        Refresh.refreshTerminal(); 
+        JobSeekerInterface js = new JobSeekerInterface();
+        js.displayJobSeekerMenu();   // Displays JobSeeker Interface
+    }
             case 2 -> System.out.println("Displaying Recruiter Interface...");
             case 3 -> System.out.println("Displaying Admin Interface...");
             default -> System.out.println("Unknown user type.");
