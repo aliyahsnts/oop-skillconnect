@@ -1,0 +1,3 @@
+id,fullName,username,password,userType,money
+1,jobseeker,jobseeker,123,1,0.0
+2,recruiter,recruiter,123,2,0.0

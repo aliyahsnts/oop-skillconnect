@@ -163,3 +163,17 @@ Otherwise, if your file path does not end with \bin (for example, it ends with \
 <pre> java Main </pre>
 
 The Java program should now be running.
+
+# How to RUN Your Code (UPDATED)
+
+Since our program now uses packages, running the program is now different.
+
+1. From your project root (skillconnect):
+<pre> javac -d bin -sourcepath src src\Main.java</pre>
+
+This will create a bin folder with subfolders with files that end with .class.
+
+2. Run your program from bin
+<pre> java -cp bin Main </pre>
+
+The Java program should now be running.
