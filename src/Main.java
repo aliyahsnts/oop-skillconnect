@@ -1,7 +1,5 @@
 import java.util.Scanner;
-import managers.UserManager;
-import managers.JobPostingManager;
-import managers.ApplicationManager;
+import managers.*;
 import utils.Refresh;
 import auth.Auth;
 
@@ -10,11 +8,15 @@ public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         UserManager userManager = new UserManager("data/users.csv");
-        JobPostingManager jobPostingManager = new JobPostingManager("data/jobs.csv");
+        JobPostingManager jobPostingManager = new JobPostingManager("data/jobpostings.csv");
         ApplicationManager applicationManager = new ApplicationManager("data/applications.csv");
+        ProductManager productManager = new ProductManager("data/products.csv");
+        TransactionManager transactionManager = new TransactionManager("data/transactions.csv");
+        ReportManager reportManager = new ReportManager("data/reports.csv");
 
-        // Initialize Auth with UserManager, JobPostingManager, ApplicationManager
-        Auth.init(userManager, jobPostingManager, applicationManager);
+
+        // Initialize Auth with managers
+        Auth.init(userManager, jobPostingManager, applicationManager, productManager, transactionManager, reportManager);
 
         while (true) {
             Refresh.refreshTerminal(); 
