@@ -1,8 +1,10 @@
 package ui;
 
+import java.util.List;
 // import java.util.List;
 import java.util.Scanner;
 import models.Admin;
+import models.User;
 // import models.User;
 // import models.JobPosting;
 import managers.UserManager;
@@ -98,88 +100,83 @@ public class AdminMenu {
     }
 
     private void viewAllAccounts() {
-        // List<User> users = userManager.getAllUsers();
-        // if (users.isEmpty()) {
-        //     System.out.println("No users found.");
-        //     return;
-        // }
-
-        // System.out.println("\n=== All Users ===");
-        // for (User u : users) {
-        //     System.out.println(u);
-        // }
+        List<User> users = userManager.getAllUsers();
+        if (users.isEmpty()) {
+            System.out.println("No users found.");
+            return;
+        }
+        System.out.println("\nAll Users:");
+        for (User u : users) {
+            System.out.println("----------------------------");
+            System.out.println("ID: " + u.getId() + ", Name: " + u.getFullName() + ", Username: " + u.getUsername() + ", Type: " + u.getUserType());
+        }
+        System.out.println("----------------------------");
     }
 
     private void createAccount() {
-        // System.out.print("Enter full name: ");
-        // String fullName = scanner.nextLine();
-        // System.out.print("Enter username: ");
-        // String username = scanner.nextLine();
+        System.out.print("Enter full name: ");
+        String fullName = scanner.nextLine().trim();
+        System.out.print("Enter username: ");
+        String username = scanner.nextLine().trim();
 
-        // if (userManager.usernameExists(username)) {
-        //     System.out.println("ERROR: Username already exists!");
-        //     return;
-        // }
+        if (userManager.usernameExists(username)) {
+            System.out.println("ERROR: Username already exists!");
+            return;
+        }
 
-        // System.out.print("Enter password: ");
-        // String password = scanner.nextLine();
-        // System.out.print("User type (1=Jobseeker, 2=Recruiter, 3=Admin): ");
-        // int type = Integer.parseInt(scanner.nextLine());
+        System.out.print("Enter password: ");
+        String password = scanner.nextLine().trim();
+        System.out.print("Enter user type (1=Jobseeker, 2=Recruiter, 3=Admin): ");
+        int type = readInt();
 
-        // User user = switch (type) {
-        //     case 1 -> new models.Jobseeker(fullName, username, password);
-        //     case 2 -> new models.Recruiter(fullName, username, password);
-        //     case 3 -> new Admin(fullName, username, password);
-        //     default -> null;
-        // };
-
-        // if (user != null) {
-        //     userManager.addUser(user);
-        //     System.out.println("SUCCESS: Account created!");
-        // } else {
-        //     System.out.println("ERROR: Invalid user type.");
-        // }
+        User newUser = userManager.createUser(fullName, username, password, type);
+        if (newUser != null) {
+            System.out.println("SUCCESS: Account created! ID=" + newUser.getId());
+        } else {
+            System.out.println("ERROR: Invalid user type.");
+        }
     }
 
     private void updateAccount() {
-        // System.out.print("Enter username to update: ");
-        // String username = scanner.nextLine();
+        System.out.print("Enter username to update: ");
+        String username = scanner.nextLine().trim();
+        User user = userManager.findUser(username);
+        if (user == null) {
+            System.out.println("User not found.");
+            return;
+        }
 
-        // User user = userManager.findUser(username);
-        // if (user == null) {
-        //     System.out.println("User not found.");
-        //     return;
-        // }
+        System.out.print("Enter new full name (leave blank to keep current): ");
+        String fullName = scanner.nextLine().trim();
+        System.out.print("Enter new password (leave blank to keep current): ");
+        String password = scanner.nextLine().trim();
 
-        // System.out.print("Enter new full name (leave blank to keep current): ");
-        // String fullName = scanner.nextLine();
-        // System.out.print("Enter new password (leave blank to keep current): ");
-        // String password = scanner.nextLine();
+        if (!fullName.isEmpty()) user.setFullName(fullName);
+        if (!password.isEmpty()) user.setPassword(password);
 
-        // if (!fullName.isBlank()) user.setFullName(fullName);
-        // if (!password.isBlank()) user.setPassword(password);
-
-        // userManager.saveUsers(); // Make sure UserManager has a save method
-        // System.out.println("SUCCESS: Account updated!");
+        userManager.saveUsers();
+        System.out.println("SUCCESS: Account updated!");
     }
 
     private void deleteAccount() {
-        // System.out.print("Enter username to delete: ");
-        // String username = scanner.nextLine();
+        System.out.print("Enter username to update: ");
+        String username = scanner.nextLine().trim();
+        User user = userManager.findUser(username);
+        if (user == null) {
+            System.out.println("User not found.");
+            return;
+        }
 
-        // User user = userManager.findUser(username);
-        // if (user == null) {
-        //     System.out.println("User not found.");
-        //     return;
-        // }
+        System.out.print("Enter new full name (leave blank to keep current): ");
+        String fullName = scanner.nextLine().trim();
+        System.out.print("Enter new password (leave blank to keep current): ");
+        String password = scanner.nextLine().trim();
 
-        // System.out.print("Confirm delete? (y/n): ");
-        // if (scanner.nextLine().equalsIgnoreCase("y")) {
-        //     userManager.removeUser(user);
-        //     System.out.println("SUCCESS: Account deleted!");
-        // } else {
-        //     System.out.println("Deletion cancelled.");
-        // }
+        if (!fullName.isEmpty()) user.setFullName(fullName);
+        if (!password.isEmpty()) user.setPassword(password);
+
+        userManager.saveUsers();
+        System.out.println("SUCCESS: Account updated!");
     }
 
     private void viewAllJobs() {

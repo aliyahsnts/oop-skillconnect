@@ -6,8 +6,11 @@ import models.User;
 import utils.CSVHelper;
 
 public class UserManager {
+    // define User path & header
     private final Path csvPath;
     private final String HEADER = "id,fullName,username,password,userType,money";
+
+    // creating array of Users
     private final List<User> users = new ArrayList<>();
 
     // Constructor that takes CSV file path
@@ -17,7 +20,7 @@ public class UserManager {
         load();
     }
 
-    // Load users from CSV
+    // load - Load users from CSV
     private void load() {
         users.clear();
         List<String> lines = CSVHelper.readAllLines(csvPath);
@@ -45,7 +48,7 @@ public class UserManager {
         }
     }
 
-    // Save users to CSV
+    // persist - Save users to CSV
     private void persist() {
         List<String> out = new ArrayList<>();
         out.add(HEADER);
@@ -56,12 +59,12 @@ public class UserManager {
         CSVHelper.writeAllLines(csvPath, out);
     }
 
-    // Check if a username exists
+    // usernameExists - check if a username exists
     public boolean usernameExists(String username) {
         return users.stream().anyMatch(u -> u.getUsername().equalsIgnoreCase(username));
     }
 
-    // Find a user by username
+    // findUser - find a user by username
     public User findUser(String username) {
         return users.stream()
                     .filter(u -> u.getUsername().equalsIgnoreCase(username))
@@ -69,12 +72,12 @@ public class UserManager {
                     .orElse(null);
     }
 
-    // Generate next unique ID
+    // generate new id - finds highest application id, return next available id. if list is empty, start at 1
     public int nextId() {
         return users.stream().mapToInt(User::getId).max().orElse(0) + 1;
     }
 
-    // Add a user (auto-generates ID if not set)
+    // add a user (auto-generates ID if not set)
     public void addUser(User user) {
         if (user.getId() <= 0) { // ID not set
             user.setId(nextId());
@@ -83,7 +86,7 @@ public class UserManager {
         persist();
     }
 
-    // Optional: Get all users
+    // get all users
     public List<User> getAllUsers() {
         return new ArrayList<>(users);
     }

@@ -17,9 +17,10 @@ import ui.AdminMenu;
 //utils
 import utils.Refresh;
 
-// Auth class handles login and registration logic
+// Auth class - handles login and registration logic
 
 public class Auth {
+    // static to share across all Auth methods
     private static Scanner sc = new Scanner(System.in);
     private static UserManager userManager;
     private static JobPostingManager jobPostingManager;
@@ -32,7 +33,9 @@ public class Auth {
         applicationManager = am;
     }
 
-    // Login function
+    // ====================
+    //    LOGIN FUNCTION
+    // ====================
     public static void login() {
         System.out.print("Enter username: ");
         String username = sc.nextLine();
@@ -87,7 +90,10 @@ public class Auth {
         }
     }
 
-    // Register function
+    // ====================
+    //  REGISTER FUNCTION
+    // ====================
+
     public static void register() {
         System.out.print("Enter full name: ");
         String fullName = sc.nextLine();
