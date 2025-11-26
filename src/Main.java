@@ -11,7 +11,7 @@ public class Main {
         Scanner sc = new Scanner(System.in);
         UserManager userManager = new UserManager("data/users.csv");
         JobPostingManager jobPostingManager = new JobPostingManager("data/jobs.csv");
-        ApplicationManager applicationManager = new ApplicationManager("data/jobs.csv");
+        ApplicationManager applicationManager = new ApplicationManager("data/applications.csv");
 
         // Initialize Auth with UserManager, JobPostingManager, ApplicationManager
         Auth.init(userManager, jobPostingManager, applicationManager);
