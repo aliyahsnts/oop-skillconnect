@@ -80,8 +80,8 @@ public class Auth {
                 System.out.println("Displaying Admin Interface...");
                 Refresh.refreshTerminal();
                 Admin admin = (Admin) user;
-                AdminMenu menu = new Admin(admin, jobPostingManager, applicationManager);
-                admin.show();
+                AdminMenu menu = new AdminMenu(admin, userManager, jobPostingManager, applicationManager); 
+                menu.show(); 
             }
             default -> System.out.println("Unknown user type.");
         }
@@ -120,11 +120,13 @@ public class Auth {
 
         // Create new user based on type
         User newUser;
+        int newId = userManager.nextId();
         if (userType == 1) {
-            newUser = new Jobseeker(fullName, username, password);
-        } else { // userType == 2
-            newUser = new Recruiter(fullName, username, password);
+            newUser = new Jobseeker(newId, fullName, username, password);
+        } else {
+            newUser = new Recruiter(newId, fullName, username, password);
         }
+
         userManager.addUser(newUser);
         System.out.println("SUCCESS: Account created successfully!");
         Refresh.refreshTerminal(); 

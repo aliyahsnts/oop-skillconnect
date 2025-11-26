@@ -9,7 +9,7 @@ import auth.Auth;
 public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-        UserManager userManager = new UserManager();
+        UserManager userManager = new UserManager("data/users.csv");
         JobPostingManager jobPostingManager = new JobPostingManager("data/jobs.csv");
         ApplicationManager applicationManager = new ApplicationManager("data/jobs.csv");
 
