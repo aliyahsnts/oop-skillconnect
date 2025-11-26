@@ -33,6 +33,7 @@ public class Main {
                 case "0" -> {
                     System.out.println("Exiting program...");
                     Refresh.refreshTerminal(); 
+                    sc.close();
                     System.exit(0);
                 }
                 default -> System.out.println("ERROR: Invalid option. Please enter either ‘1’ for Login, ‘2’ for Register, or ‘0’ to Exit.");
