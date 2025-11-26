@@ -86,6 +86,18 @@ public class UserManager {
         persist();
     }
 
+    // saveUsers - public method to save users (called from AdminMenu)
+    public void saveUsers() {
+        persist();
+    }
+
+    // deleteUser - delete a user by username
+    public boolean deleteUser(String username) {
+        boolean removed = users.removeIf(u -> u.getUsername().equalsIgnoreCase(username));
+        if (removed) persist();
+        return removed;
+    }
+
     // get all users
     public List<User> getAllUsers() {
         return new ArrayList<>(users);

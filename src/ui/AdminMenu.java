@@ -48,6 +48,7 @@ public class AdminMenu {
                 case "2" -> manageJobs();
                 case "3" -> manageMarketplace();
                 case "4" -> viewAllTransactions();
+                case "5" -> viewAllReports();
                 case "0" -> {
                     if (confirmLogout()) return;
                 }
@@ -332,6 +333,7 @@ public class AdminMenu {
             case "4" -> deleteProduct();
             case "0" -> { return; }
             default -> System.out.println("Invalid option.");
+        }
     }
 
     private void viewAllProducts(){}
@@ -346,6 +348,23 @@ public class AdminMenu {
     private void viewAllTransactions() {
         System.out.println(">>> View All Transactions (Work in Progress)");
     }
+
+    // ========================================================================
+    //   REPORTS FUNCTIONS
+    // ========================================================================
+    private void viewAllReports() {
+        System.out.println(">>> View All Transactions (Work in Progress)");
+    }
+
+    //each report = submitted by           report                   reason
+    // ex.        juan (jobseeker)     peter (recruiter)   deceptive job description    
+
+
+    private void updateReport() {
+        System.out.println(">>> View All Transactions (Work in Progress)");
+    }
+
+    private void deleteReport() {}
 
     // ========================================================================
     //   OTHER FUNCTIONS
@@ -366,7 +385,7 @@ public class AdminMenu {
             }
         }
     }
-    
+
     private int readInt() {
         while (true) {
             String s = scanner.nextLine().trim();
