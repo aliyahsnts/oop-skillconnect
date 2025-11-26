@@ -4,6 +4,9 @@ import java.util.List;
 // import java.util.List;
 import java.util.Scanner;
 import models.Admin;
+import models.JobPosting;
+import models.Jobseeker;
+import models.Recruiter;
 import models.User;
 // import models.User;
 // import models.JobPosting;
@@ -26,6 +29,7 @@ public class AdminMenu {
         this.am = am;
     }
 
+    // show - display menu
     public void show() {
         while (true) {
             System.out.println("\n=== ADMIN MENU ===");
@@ -52,6 +56,11 @@ public class AdminMenu {
         }
     }
 
+    // ========================================================================
+    //   USER FUNCTIONS
+    // ========================================================================
+
+    //manage users - manage users menu
     private void manageUsers() {
         System.out.println("\n=== Manage Users ===");
         System.out.println("1. View All Users");
@@ -67,11 +76,139 @@ public class AdminMenu {
             case "2" -> createAccount();
             case "3" -> updateAccount();
             case "4" -> deleteAccount();
-            case "0" -> {}
+            case "0" -> { return; }
             default -> System.out.println("Invalid option.");
         }
     }
 
+    //view all accounts - view all users
+    private void viewAllAccounts() {
+        List<User> users = userManager.getAllUsers();
+        if (users.isEmpty()) {
+            System.out.println("No users found.");
+            return;
+        }
+        
+        System.out.println("\n=== All Users ===");
+        for (User u : users) {
+            String userTypeStr = switch (u.getUserType()) {
+                case 1 -> "Jobseeker";
+                case 2 -> "Recruiter";
+                case 3 -> "Admin";
+                default -> "Unknown";
+            };
+            System.out.println("----------------------------");
+            System.out.println("ID: " + u.getId());
+            System.out.println("Name: " + u.getFullName());
+            System.out.println("Username: " + u.getUsername());
+            System.out.println("Type: " + userTypeStr);
+            System.out.println("Money: $" + u.getMoney());
+        }
+        System.out.println("----------------------------");
+    }
+
+    // create account
+    private void createAccount() {
+        System.out.print("Enter full name: ");
+        String fullName = scanner.nextLine().trim();
+        
+        System.out.print("Enter username: ");
+        String username = scanner.nextLine().trim();
+
+        if (userManager.usernameExists(username)) {
+            System.out.println("ERROR: Username already exists!");
+            return;
+        }
+
+        System.out.print("Enter password: ");
+        String password = scanner.nextLine().trim();
+        
+        System.out.print("Enter user type (1=Jobseeker, 2=Recruiter, 3=Admin): ");
+        int type = readInt();
+
+        if (type < 1 || type > 3) {
+            System.out.println("ERROR: Invalid user type.");
+            return;
+        }
+
+        int newId = userManager.nextId();
+        User newUser;
+        
+        switch (type) {
+            case 1 -> newUser = new Jobseeker(newId, fullName, username, password);
+            case 2 -> newUser = new Recruiter(newId, fullName, username, password);
+            case 3 -> newUser = new Admin(newId, fullName, username, password);
+            default -> {
+                System.out.println("ERROR: Invalid user type.");
+                return;
+            }
+        }
+        
+        userManager.addUser(newUser);
+        System.out.println("SUCCESS: Account created! ID=" + newUser.getId());
+    }
+
+    //update account
+    private void updateAccount() {
+        System.out.print("Enter username to update: ");
+        String username = scanner.nextLine().trim();
+        User user = userManager.findUser(username);
+        
+        if (user == null) {
+            System.out.println("ERROR: User not found.");
+            return;
+        }
+
+        System.out.println("Current user info:");
+        System.out.println("Name: " + user.getFullName());
+        System.out.println("Username: " + user.getUsername());
+
+        System.out.print("Enter new full name (leave blank to keep current): ");
+        String fullName = scanner.nextLine().trim();
+        
+        System.out.print("Enter new password (leave blank to keep current): ");
+        String password = scanner.nextLine().trim();
+
+        if (!fullName.isEmpty()) user.setFullName(fullName);
+        if (!password.isEmpty()) user.setPassword(password);
+
+        userManager.saveUsers();
+        System.out.println("SUCCESS: Account updated!");
+    }
+
+    //delete account
+    private void deleteAccount() {
+        System.out.print("Enter username to delete: ");
+        String username = scanner.nextLine().trim();
+        User user = userManager.findUser(username);
+        
+        if (user == null) {
+            System.out.println("ERROR: User not found.");
+            return;
+        }
+
+        System.out.println("User info:");
+        System.out.println("Name: " + user.getFullName());
+        System.out.println("Username: " + user.getUsername());
+        
+        System.out.print("Are you sure you want to delete this account? (Y/N): ");
+        String conf = scanner.nextLine().trim();
+        
+        if (conf.equalsIgnoreCase("Y")) {
+            boolean removed = userManager.deleteUser(username);
+            if (removed) {
+                System.out.println("SUCCESS: Account deleted!");
+            } else {
+                System.out.println("ERROR: Could not delete account.");
+            }
+        } else {
+            System.out.println("Deletion cancelled.");
+        }
+    }
+
+    // ========================================================================
+    //   JOBS FUNCTIONS
+    // ========================================================================
     private void manageJobs() {
         System.out.println("\n=== Manage Jobs ===");
         System.out.println("1. View All Jobs");
@@ -90,111 +227,129 @@ public class AdminMenu {
         }
     }
 
-    private void manageMarketplace() {
-        System.out.println("\n=== Manage Marketplace ===");
-        System.out.println("1. View All Products");
-        System.out.println("2. Update product");
-        System.out.println("3. Delete product");
-        System.out.println("0. Back");
-        System.out.print("Enter choice: ");
-    }
-
-    private void viewAllAccounts() {
-        List<User> users = userManager.getAllUsers();
-        if (users.isEmpty()) {
-            System.out.println("No users found.");
-            return;
-        }
-        System.out.println("\nAll Users:");
-        for (User u : users) {
-            System.out.println("----------------------------");
-            System.out.println("ID: " + u.getId() + ", Name: " + u.getFullName() + ", Username: " + u.getUsername() + ", Type: " + u.getUserType());
-        }
-        System.out.println("----------------------------");
-    }
-
-    private void createAccount() {
-        System.out.print("Enter full name: ");
-        String fullName = scanner.nextLine().trim();
-        System.out.print("Enter username: ");
-        String username = scanner.nextLine().trim();
-
-        if (userManager.usernameExists(username)) {
-            System.out.println("ERROR: Username already exists!");
-            return;
-        }
-
-        System.out.print("Enter password: ");
-        String password = scanner.nextLine().trim();
-        System.out.print("Enter user type (1=Jobseeker, 2=Recruiter, 3=Admin): ");
-        int type = readInt();
-
-        User newUser = userManager.createUser(fullName, username, password, type);
-        if (newUser != null) {
-            System.out.println("SUCCESS: Account created! ID=" + newUser.getId());
-        } else {
-            System.out.println("ERROR: Invalid user type.");
-        }
-    }
-
-    private void updateAccount() {
-        System.out.print("Enter username to update: ");
-        String username = scanner.nextLine().trim();
-        User user = userManager.findUser(username);
-        if (user == null) {
-            System.out.println("User not found.");
-            return;
-        }
-
-        System.out.print("Enter new full name (leave blank to keep current): ");
-        String fullName = scanner.nextLine().trim();
-        System.out.print("Enter new password (leave blank to keep current): ");
-        String password = scanner.nextLine().trim();
-
-        if (!fullName.isEmpty()) user.setFullName(fullName);
-        if (!password.isEmpty()) user.setPassword(password);
-
-        userManager.saveUsers();
-        System.out.println("SUCCESS: Account updated!");
-    }
-
-    private void deleteAccount() {
-        System.out.print("Enter username to update: ");
-        String username = scanner.nextLine().trim();
-        User user = userManager.findUser(username);
-        if (user == null) {
-            System.out.println("User not found.");
-            return;
-        }
-
-        System.out.print("Enter new full name (leave blank to keep current): ");
-        String fullName = scanner.nextLine().trim();
-        System.out.print("Enter new password (leave blank to keep current): ");
-        String password = scanner.nextLine().trim();
-
-        if (!fullName.isEmpty()) user.setFullName(fullName);
-        if (!password.isEmpty()) user.setPassword(password);
-
-        userManager.saveUsers();
-        System.out.println("SUCCESS: Account updated!");
-    }
-
     private void viewAllJobs() {
-        System.out.println(">>> View All Jobs (Work in Progress)");
+        List<Object> list = jpm.findAll();
+        if (list.isEmpty()) {
+            System.out.println("No job postings found.");
+            return;
+        }
+        
+        System.out.println("\n=== All Job Postings ===");
+        for (Object obj : list) {
+            JobPosting job = (JobPosting) obj;
+            System.out.println("---------------------------");
+            System.out.println(job.displayString());
+        }
+        System.out.println("---------------------------");
     }
 
     private void updateJob() {
-        System.out.println(">>> Update Job (Work in Progress)");
+        System.out.print("Enter Job ID to update: ");
+        int jobId = readInt();
+        JobPosting job = jpm.findById(jobId);
+        
+        if (job == null) {
+            System.out.println("ERROR: Job not found.");
+            return;
+        }
+        
+        System.out.println("Current job info:");
+        System.out.println(job.displayString());
+
+        System.out.print("Enter new job name (leave blank to keep): ");
+        String name = scanner.nextLine().trim();
+        System.out.print("Enter new description (leave blank to keep): ");
+        String desc = scanner.nextLine().trim();
+        System.out.print("Enter new hours needed (leave blank to keep): ");
+        String hours = scanner.nextLine().trim();
+        System.out.print("Enter new payment (leave blank to keep): ");
+        String paymentStr = scanner.nextLine().trim();
+        System.out.print("Enter new status (Available/Closed) (leave blank to keep): ");
+        String status = scanner.nextLine().trim();
+
+        Double payment = null;
+        if (!paymentStr.isEmpty()) {
+            try {
+                payment = Double.valueOf(paymentStr);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid payment. Update cancelled.");
+                return;
+            }
+        }
+
+        boolean ok = jpm.update(jobId,
+                name.isEmpty() ? null : name,
+                desc.isEmpty() ? null : desc,
+                hours.isEmpty() ? null : hours,
+                payment,
+                status.isEmpty() ? null : status);
+
+        if (ok) System.out.println("SUCCESS: Job successfully updated!");
+        else System.out.println("ERROR: Could not update job.");
     }
 
     private void deleteJob() {
-        System.out.println(">>> Delete Job (Work in Progress)");
+        System.out.print("Enter Job ID to delete: ");
+        int jobId = readInt();
+        JobPosting job = jpm.findById(jobId);
+        
+        if (job == null) {
+            System.out.println("ERROR: Job not found.");
+            return;
+        }
+        
+        System.out.println("Job info:");
+        System.out.println(job.displayString());
+        System.out.print("Are you sure you want to delete this job? (Y/N): ");
+        String conf = scanner.nextLine().trim();
+        
+        if (conf.equalsIgnoreCase("Y")) {
+            boolean removed = jpm.delete(jobId);
+            if (removed) System.out.println("SUCCESS: Job successfully deleted!");
+            else System.out.println("ERROR: Could not delete job.");
+        } else {
+            System.out.println("Deletion cancelled.");
+        }
     }
 
+    // ========================================================================
+    //   MARKETPLACE FUNCTIONS
+    // ========================================================================
+    private void manageMarketplace() {
+        System.out.println("\n=== Manage Marketplace ===");
+        System.out.println("1. View All Products");
+        System.out.println("2. Add product");
+        System.out.println("3. Update product");
+        System.out.println("4. Delete product");
+        System.out.println("0. Back");
+        System.out.print("Enter choice: ");
+
+        String choice = scanner.nextLine().trim();
+        switch (choice) {
+            case "1" -> viewAllProducts();
+            case "2" -> createProduct();
+            case "3" -> updateProduct();
+            case "4" -> deleteProduct();
+            case "0" -> { return; }
+            default -> System.out.println("Invalid option.");
+    }
+
+    private void viewAllProducts(){}
+    private void createProduct(){}
+    private void updateProduct(){}
+    private void deleteProduct(){}
+    
+
+    // ========================================================================
+    //   TRANSACTIONS FUNCTIONS
+    // ========================================================================
     private void viewAllTransactions() {
         System.out.println(">>> View All Transactions (Work in Progress)");
     }
 
+    // ========================================================================
+    //   OTHER FUNCTIONS
+    // ========================================================================
     private boolean confirmLogout() {
         while (true) {
             System.out.print("Are you sure you would like to logout? (y/n): ");
@@ -208,6 +363,17 @@ public class AdminMenu {
                 return false;
             } else {
                 System.out.println("Invalid input. Please enter 'y' or 'n'.");
+            }
+        }
+    }
+    
+    private int readInt() {
+        while (true) {
+            String s = scanner.nextLine().trim();
+            try {
+                return Integer.parseInt(s);
+            } catch (NumberFormatException e) {
+                System.out.print("Please enter a valid integer: ");
             }
         }
     }
