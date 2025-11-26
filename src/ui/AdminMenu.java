@@ -134,9 +134,9 @@ public class AdminMenu {
         User newUser;
         
         switch (type) {
-            case 1 -> newUser = new Jobseeker(newId, fullName, username, password);
-            case 2 -> newUser = new Recruiter(newId, fullName, username, password);
-            case 3 -> newUser = new Admin(newId, fullName, username, password);
+            case 1 -> newUser = new Jobseeker(newId, fullName, username, password, 0.0);
+            case 2 -> newUser = new Recruiter(newId, fullName, username, password, 0.0);
+            case 3 -> newUser = new Admin(newId, fullName, username, password, 0.0);
             default -> {
                 System.out.println("ERROR: Invalid user type.");
                 return;

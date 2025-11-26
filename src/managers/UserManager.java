@@ -2,7 +2,8 @@ package managers;
 
 import java.nio.file.*;
 import java.util.*;
-import models.User;
+
+import models.*;
 import utils.CSVHelper;
 
 public class UserManager {

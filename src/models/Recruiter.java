@@ -6,7 +6,7 @@ public class Recruiter extends User {
     private String companyDescription;
 
     // Constructor
-    public Recruiter(int id, String fullName, String username, String password) {
+    public Recruiter(int id, String fullName, String username, String password, double money) {
         super(id, fullName, username, password, 2, 0.0); // userType=2, starting money=0
         setId(id);
     }
@@ -29,8 +29,12 @@ public class Recruiter extends User {
         String fullName = p[1].trim();
         String username = p[2].trim();
         String password = p[3].trim();
+        double money = 0.0;
+        if (!p[4].trim().isEmpty()) {
+            money = Double.parseDouble(p[4].trim());
+        }
 
-        Recruiter r = new Recruiter(id, fullName, username, password);
+        Recruiter r = new Recruiter(id, fullName, username, password, money);
 
         if (p.length >= 5) r.setCompanyName(p[4].trim());
         if (p.length >= 6) r.setCompanyDescription(p[5].trim());

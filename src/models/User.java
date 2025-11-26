@@ -36,4 +36,14 @@ public class User implements Serializable {
     public void setPassword(String password) { this.password = password; }
     public void setUserType(int userType) { this.userType = userType; }
     public void setMoney(double money) { this.money = money; }
+
+    //create new user
+    public static User createUser(int id, String fullName, String username, String password, int userType, double money) {
+        return switch (userType) {
+            case 1 -> new Jobseeker(id, fullName, username, password, money);
+            case 2 -> new Recruiter(id, fullName, username, password, money);
+            case 3 -> new Admin(id, fullName, username, password, money);
+            default -> throw new IllegalArgumentException("Invalid user type: " + userType);
+        };
+    }
 }
