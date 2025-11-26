@@ -2,23 +2,26 @@ package ui;
 
 import java.util.Scanner;
 import java.util.List;
-import models.Jobseeker;
-import models.JobPosting;
-import models.Application;
-import managers.JobPostingManager;
-import managers.ApplicationManager;
+import models.*;
+import managers.*;
 
 public class JobseekerMenu {
     private Jobseeker jobseeker;
     private JobPostingManager jpm;
     private ApplicationManager am;
+    private ProductManager pm;
+    private TransactionManager tm;
+    private ReportManager rm;
     private Scanner scanner = new Scanner(System.in);
 
     // Constructor
-    public JobseekerMenu(Jobseeker jobseeker, JobPostingManager jpm, ApplicationManager am) {
+    public JobseekerMenu(Jobseeker jobseeker, JobPostingManager jpm, ApplicationManager am, ProductManager pm, TransactionManager tm, ReportManager rm) {
         this.jobseeker = jobseeker;
         this.jpm = jpm;
         this.am = am;
+        this.pm = pm;
+        this.tm = tm;
+        this.rm = rm;
     }
 
     public void show() {

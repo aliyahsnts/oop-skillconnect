@@ -2,14 +2,9 @@ package auth;
 
 import java.util.Scanner;
 // managers
-import managers.ApplicationManager;
-import managers.UserManager;
-import managers.JobPostingManager;
+import managers.*;
 // models
-import models.Admin;
-import models.Jobseeker;
-import models.User;
-import models.Recruiter;
+import models.*;
 //ui 
 import ui.RecruiterMenu;
 import ui.JobseekerMenu;
@@ -25,12 +20,18 @@ public class Auth {
     private static UserManager userManager;
     private static JobPostingManager jobPostingManager;
     private static ApplicationManager applicationManager;
+    private static ProductManager productManager;
+    private static TransactionManager transactionManager;
+    private static ReportManager reportManager;
 
     // Initialize Auth with all managers instance
-    public static void init(UserManager um, JobPostingManager jpm, ApplicationManager am) {
+    public static void init(UserManager um, JobPostingManager jpm, ApplicationManager am, ProductManager pm, TransactionManager tm, ReportManager rm) {
         userManager = um;
         jobPostingManager = jpm;
         applicationManager = am;
+        productManager = pm;
+        transactionManager = tm;
+        reportManager = rm;
     }
 
     // ====================
@@ -69,21 +70,29 @@ public class Auth {
                 System.out.println("Displaying Jobseeker Interface...");
                 Refresh.refreshTerminal(); 
                 Jobseeker js = (Jobseeker) user;
-                JobseekerMenu menu = new JobseekerMenu(js, jobPostingManager, applicationManager);
+                JobseekerMenu menu = new JobseekerMenu(js, jobPostingManager,
+                applicationManager,
+                productManager,
+                transactionManager,
+                reportManager);
                 menu.show();
             }
             case 2 -> {
                 System.out.println("Displaying Recruiter Interface...");
                 Refresh.refreshTerminal();
                 Recruiter rec = (Recruiter) user;
-                RecruiterMenu menu = new RecruiterMenu(rec, jobPostingManager, applicationManager);
+                RecruiterMenu menu = new RecruiterMenu(rec, jobPostingManager,
+                applicationManager,
+                productManager,
+                transactionManager,
+                reportManager);
                 menu.show();
             }
             case 3 -> {
                 System.out.println("Displaying Admin Interface...");
                 Refresh.refreshTerminal();
                 Admin admin = (Admin) user;
-                AdminMenu menu = new AdminMenu(admin, userManager, jobPostingManager, applicationManager); 
+                AdminMenu menu = new AdminMenu(admin, userManager, jobPostingManager, applicationManager, productManager, transactionManager, reportManager); 
                 menu.show(); 
             }
             default -> System.out.println("Unknown user type.");
