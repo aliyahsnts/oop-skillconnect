@@ -7,6 +7,7 @@ public class JobPosting {
     private double payment;
     private String status; // e.g., Available, Closed
 
+    //constructor
     public JobPosting(int jobId, String jobName, String description, String hoursNeeded, double payment, String status) {
         this.jobId = jobId;
         this.jobName = jobName;
@@ -16,6 +17,7 @@ public class JobPosting {
         this.status = status;
     }
 
+    //getters
     public final int getJobId() { return jobId; }
     public String getJobName() { return jobName; }
     public String getDescription() { return description; }
@@ -23,6 +25,7 @@ public class JobPosting {
     public double getPayment() { return payment; }
     public String getStatus() { return status; }
 
+    //setters
     public void setJobName(String jobName) { this.jobName = jobName; }
     public void setDescription(String description) { this.description = description; }
     public void setHoursNeeded(String hoursNeeded) { this.hoursNeeded = hoursNeeded; }
@@ -34,6 +37,8 @@ public class JobPosting {
         return jobId + "," + escape(jobName) + "," + escape(description) + "," + escape(hoursNeeded) + "," + payment + "," + escape(status);
     }
 
+    //methods
+    //display string - display jobs as string
     public String displayString() {
         return "Job ID: " + jobId +
                "\nJob Name: " + jobName +
@@ -43,6 +48,7 @@ public class JobPosting {
                "\nStatus: " + status;
     }
 
+    //escape - replace "," with " " 
     private String escape(String s) {
         if (s == null) return "";
         return s.replace(",", " "); // simple: remove commas to avoid CSV split issues
