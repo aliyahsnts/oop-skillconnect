@@ -137,9 +137,9 @@ public class Auth {
         User newUser;
         int newId = userManager.nextId();
         if (userType == 1) {
-            newUser = new Jobseeker(newId, fullName, username, password);
+            newUser = new Jobseeker(newId, fullName, username, password, 0.0);
         } else {
-            newUser = new Recruiter(newId, fullName, username, password);
+            newUser = new Recruiter(newId, fullName, username, password, 0.0);
         }
 
         userManager.addUser(newUser);
