@@ -42,7 +42,7 @@ public class UserManager {
                 int userType = Integer.parseInt(p[4].trim());
                 double money = (p.length >= 6) ? Double.parseDouble(p[5].trim()) : 0.0;
 
-                users.add(new User(id, fullName, username, password, userType, money));
+                users.add(User.createUser(id, fullName, username, password, userType, money));
             } catch (NumberFormatException e) {
                 System.err.println("Skipping invalid user line: " + line);
             }
