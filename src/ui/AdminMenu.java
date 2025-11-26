@@ -1,34 +1,32 @@
 package ui;
 
 import java.util.List;
-// import java.util.List;
 import java.util.Scanner;
-import models.Admin;
-import models.JobPosting;
-import models.Jobseeker;
-import models.Recruiter;
-import models.User;
-// import models.User;
-// import models.JobPosting;
-import managers.UserManager;
-import managers.JobPostingManager;
-import managers.ApplicationManager;
+import models.*;
+import utils.Refresh;
+import managers.*;
 
 public class AdminMenu {
     private Admin admin;
     private UserManager userManager;
     private JobPostingManager jpm;
     private ApplicationManager am;
+    private ProductManager pm;
+    private TransactionManager tm;
+    private ReportManager rm;
     private Scanner scanner = new Scanner(System.in);
 
     // Constructor
-    public AdminMenu(Admin admin, UserManager um, JobPostingManager jpm, ApplicationManager am) {
+    public AdminMenu(Admin admin, UserManager um, JobPostingManager jpm, ApplicationManager am,
+                    ProductManager pm, TransactionManager tm, ReportManager rm) {
         this.admin = admin;
         this.userManager = um;
         this.jpm = jpm;
         this.am = am;
+        this.pm = pm;
+        this.tm = tm;
+        this.rm = rm;
     }
-
     // show - display menu
     public void show() {
         while (true) {
@@ -38,7 +36,7 @@ public class AdminMenu {
             System.out.println("2. Manage Jobs");
             System.out.println("3. Manage Marketplace");
             System.out.println("4. View All Transactions");
-            System.out.println("5. View All Reports");
+            System.out.println("5. Manage Reports");
             System.out.println("0. Logout");
             System.out.print("Enter choice: ");
 
@@ -48,7 +46,7 @@ public class AdminMenu {
                 case "2" -> manageJobs();
                 case "3" -> manageMarketplace();
                 case "4" -> viewAllTransactions();
-                case "5" -> viewAllReports();
+                case "5" -> manageReports();
                 case "0" -> {
                     if (confirmLogout()) return;
                 }
@@ -336,10 +334,108 @@ public class AdminMenu {
         }
     }
 
-    private void viewAllProducts(){}
-    private void createProduct(){}
-    private void updateProduct(){}
-    private void deleteProduct(){}
+    private void viewAllProducts() {
+        List<Product> products = pm.findAll();
+        if (products.isEmpty()) {
+            System.out.println("No products found.");
+            return;
+        }
+        
+        System.out.println("\n=== All Products ===");
+        for (Product p : products) {
+            System.out.println("---------------------------");
+            System.out.println(p.displayString());
+        }
+        System.out.println("---------------------------");
+    }
+
+    private void createProduct() {
+        Refresh.refreshTerminal();
+        System.out.println("=== CREATE PRODUCT ===");
+
+        System.out.print("Enter product name: ");
+        String name = scanner.nextLine().trim();
+        
+        System.out.print("Enter description: ");
+        String desc = scanner.nextLine().trim();
+        
+        System.out.print("Enter price: ");
+        double price = readDouble();
+        
+        System.out.print("Enter quantity: ");
+        int qty = readInt();
+        
+        Product p = pm.create(name, desc, price, qty);
+
+        System.out.println("SUCCESS: Product created! (Product ID: " + p.getProductId() + ")");
+    }
+
+    private void updateProduct(){
+        Refresh.refreshTerminal();
+        System.out.println("=== UPDATE PRODUCT ===");
+
+        System.out.print("Enter product ID: ");
+        int id = readInt();
+        Product existing = pm.findById(id);
+
+        if (existing == null) {
+            System.out.println("ERROR: Product not found!");
+            pause();
+            return;
+        }
+
+        System.out.println("\nLeave a field blank to keep the current value.");
+
+        System.out.print("New name (" + existing.getProductName() + "): ");
+        String name = scanner.nextLine().trim();
+        if (name.isEmpty()) name = null;
+
+        System.out.print("New description (" + existing.getDescription() + "): ");
+        String desc = scanner.nextLine().trim();
+        if (desc.isEmpty()) desc = null;
+
+        System.out.print("New price (" + existing.getPrice() + "): ");
+        String priceStr = scanner.nextLine().trim();
+        Double price = priceStr.isEmpty() ? null : Double.parseDouble(priceStr);
+
+        System.out.print("New quantity (" + existing.getQuantity() + "): ");
+        String qtyStr = scanner.nextLine().trim();
+        Integer qty = qtyStr.isEmpty() ? null : Integer.parseInt(qtyStr);
+
+        boolean ok = pm.update(id, name, desc, price, qty, null);
+
+        System.out.println(ok ? "Product updated successfully!" : "Failed to update product.");
+        pause();
+    }
+
+    private void deleteProduct(){
+        Refresh.refreshTerminal();
+        System.out.println("=== UPDATE PRODUCT ===");
+
+        System.out.print("Enter product ID to delete: ");
+        int id = readInt();
+
+        Product p = pm.findById(id);
+
+        if (p == null) {
+            System.out.println("ERROR: Product not found!");
+            pause();
+            return;
+        }
+
+        System.out.println(p.displayString());
+        System.out.print("\nAre you sure you want to delete this product? (y/n): ");
+        if (!scanner.nextLine().trim().equalsIgnoreCase("y")) {
+            System.out.println("Cancelled.");
+            pause();
+            return;
+        }
+
+        boolean removed = pm.delete(id);
+        System.out.println(removed ? "Product deleted successfully!" : "Failed to delete product.");
+
+        pause();
+    }
     
 
     // ========================================================================
@@ -352,19 +448,112 @@ public class AdminMenu {
     // ========================================================================
     //   REPORTS FUNCTIONS
     // ========================================================================
-    private void viewAllReports() {
-        System.out.println(">>> View All Transactions (Work in Progress)");
+    private void manageReports() {
+        System.out.println("\n=== Manage Reports ===");
+        System.out.println("1. View All Reports");
+        System.out.println("2. Update Report");
+        System.out.println("3. Delete Report");
+        System.out.println("0. Back");
+        System.out.print("Enter choice: ");
+
+        String choice = scanner.nextLine().trim();
+        switch (choice) {
+            case "1" -> viewAllReports();
+            case "2" -> updateReport();
+            case "3" -> deleteReport();
+            case "0" -> { return; }
+            default -> System.out.println("Invalid option.");
+        }
     }
 
-    //each report = submitted by           report                   reason
-    // ex.        juan (jobseeker)     peter (recruiter)   deceptive job description    
+    private void viewAllReports() {
+        Refresh.refreshTerminal();
+        System.out.println("=== ALL REPORTS ===");
 
+        List<Report> reports = rm.findAll();
+
+        if (reports.isEmpty()) {
+            System.out.println("No reports found.");
+        } else {
+            for (Report r : reports) {
+                System.out.println("-------------------------");
+                System.out.println(r.displayString());
+            }
+        }
+        pause();
+    }
 
     private void updateReport() {
-        System.out.println(">>> View All Transactions (Work in Progress)");
+        Refresh.refreshTerminal();
+        System.out.println("=== UPDATE REPORT STATUS ===");
+
+        System.out.print("Enter report ID: ");
+        int id = readInt();
+
+        Report r = rm.findById(id);
+
+        if (r == null) {
+            System.out.println("ERROR: Report not found!");
+            pause();
+            return;
+        }
+
+        System.out.println("\nCurrent status: " + r.getStatus());
+        System.out.println("Choose new status:");
+        System.out.println("1. Pending");
+        System.out.println("2. Reviewed");
+        System.out.println("3. Resolved");
+        System.out.println("4. Dismissed");
+
+        System.out.print("Enter choice: ");
+        String choice = scanner.nextLine().trim();
+        String newStatus = switch (choice) {
+            case "1" -> "Pending";
+            case "2" -> "Reviewed";
+            case "3" -> "Resolved";
+            case "4" -> "Dismissed";
+            default -> null;
+        };
+
+        if (newStatus == null) {
+            System.out.println("Invalid choice.");
+            pause();
+            return;
+        }
+
+        boolean ok = rm.updateStatus(id, newStatus);
+        System.out.println(ok ? "Report updated successfully!" : "Failed to update report.");
+        pause();
     }
 
-    private void deleteReport() {}
+    private void deleteReport() {
+        Refresh.refreshTerminal();
+        System.out.println("=== DELETE REPORT ===");
+
+        System.out.print("Enter report ID to delete: ");
+        int id = readInt();
+
+        Report r = rm.findById(id);
+
+        if (r == null) {
+            System.out.println("ERROR: Report not found!");
+            pause();
+            return;
+        }
+
+        System.out.println(r.displayString());
+        System.out.print("\nAre you sure you want to delete this report? (y/n): ");
+
+        if (!scanner.nextLine().trim().equalsIgnoreCase("y")) {
+            System.out.println("Cancelled.");
+            pause();
+            return;
+        }
+
+        boolean removed = rm.delete(id);
+        System.out.println(removed ? "Report deleted successfully!" : "Failed to delete report.");
+        pause();
+    }
 
     // ========================================================================
     //   OTHER FUNCTIONS
@@ -395,5 +584,22 @@ public class AdminMenu {
                 System.out.print("Please enter a valid integer: ");
             }
         }
+    }
+
+    private double readDouble() {
+    while (true) {
+        String s = scanner.nextLine().trim();
+        try {
+            return Double.parseDouble(s);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid number. Try again.");
+        }
+    }
+    
+    }
+
+    private void pause() {
+        System.out.print("\nPress Enter to continue...");
+        scanner.nextLine();
     }
 }
