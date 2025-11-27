@@ -32,14 +32,12 @@ public class LoginAuth extends Auth {
         Refresh.refreshTerminal();
 
         switch (user.getUserType()) {
-            case 1 -> new JobseekerMenu(
-            (Jobseeker) user,
-            jobPostingManager,
-            applicationManager,
-            productManager,
-            transactionManager,
-            reportManager
-        ).show();
+        case 1 -> {
+            Jobseeker js = (Jobseeker) user;
+            js.loadResumeFromCSV();          // <-- NEW: load résumé into object
+            new JobseekerMenu(js, jobPostingManager, applicationManager,
+            productManager, transactionManager, reportManager).show();
+        }
 
         case 2 -> new RecruiterMenu(
             (Recruiter) user,
@@ -47,7 +45,8 @@ public class LoginAuth extends Auth {
             applicationManager,
             productManager,
             transactionManager,
-            reportManager
+            reportManager,
+            userManager          // <-- NEW
         ).show();
 
         case 3 -> new AdminMenu(

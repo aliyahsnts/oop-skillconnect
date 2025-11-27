@@ -9,8 +9,8 @@ public class Report {
     private final String reporterName;
     private final int reportedUserId;
     private final String reportedUsername;
-    private final String reason;
     private final String timestamp;
+    private  String reason;
     private String status; // Pending, Reviewed, Resolved, Dismissed
 
     public Report(int reportId, int reporterId, String reporterName, int reportedUserId, 
@@ -37,6 +37,8 @@ public class Report {
 
     // Setter
     public void setStatus(String status) { this.status = status; }
+
+    public void setReason(String reason) { this.reason = reason; }
 
     public static String getCurrentTimestamp() {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));

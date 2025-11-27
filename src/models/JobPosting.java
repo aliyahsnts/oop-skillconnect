@@ -38,8 +38,9 @@ public class JobPosting {
     public void setStatus(String status) { this.status = status; }
 
     // CSV line representation (escape commas in text simply)
-    public String toCSVLine() {
-        return jobId + "," + escape(jobName) + "," + escape(description) + "," + escape(hoursNeeded) + "," + payment + "," + escape(status) + escape(recruiterName);
+   public String toCSVLine() {
+        return jobId + "," + escape(jobName) + "," + escape(description) + "," +
+        escape(hoursNeeded) + "," + payment + "," + escape(status) + "," + escape(recruiterName);
     }
 
     //methods
