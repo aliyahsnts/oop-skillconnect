@@ -54,8 +54,12 @@ public class UserManager {
         List<String> out = new ArrayList<>();
         out.add(HEADER);
         for (User u : users) {
-            out.add(u.getId() + "," + u.getFullName() + "," + u.getUsername() + "," +
-                    u.getPassword() + "," + u.getUserType() + "," + u.getMoney());
+            out.add(u.getId() + "," + 
+            u.getFullName() + "," + 
+            u.getUsername() + "," +
+            u.getPassword() + "," + 
+            u.getUserType() + "," + 
+            u.getMoney());
         }
         CSVHelper.writeAllLines(csvPath, out);
     }

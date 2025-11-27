@@ -61,8 +61,9 @@ public class RecruiterMenu {
         System.out.print("Enter payment amount: ");
         double payment = readDouble();
         
-        JobPosting j = jpm.create(name, desc, hours, payment);
-        System.out.println("SUCCESS: Job post for [" + name + "] successfully created! (Job ID: " + j.getJobId() + ")");
+        jpm.create(name, desc, hours, payment, recruiter.getFullName());
+
+        System.out.println("SUCCESS: Job post for [" + name + "] successfully created! (Job ID: " + jpm.getJobId() + ")");
     }
 
     private void viewAllJobs() {

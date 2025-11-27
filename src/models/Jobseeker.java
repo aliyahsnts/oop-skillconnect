@@ -43,8 +43,9 @@ public class Jobseeker extends User {
 
     //to CSV
     public String toCSV() {
-    return getId() + "," + getFullName() + "," + getUsername() + "," + getPassword() + "," +
-           (getSkills() != null ? getSkills() : "") + "," +
-           (getResume() != null ? getResume() : "");
+    return getId() + "," + 
+        getFullName() + "," + getUsername() + "," + getPassword() + ","; 
+        //    + (getSkills() != null ? getSkills() : "") + "," +
+        //    (getResume() != null ? getResume() : "");
     }
 }

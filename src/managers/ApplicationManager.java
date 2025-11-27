@@ -43,6 +43,7 @@ public class ApplicationManager {
                 int applicantId = Integer.parseInt(p[2].trim());
                 String applicantName = p[3].trim();
                 String status = p[4].trim();
+                
                 apps.add(new Application(appId, jobId, applicantId, applicantName, status));
             } catch (NumberFormatException e) {
                 System.err.println("Skipping invalid application line: " + line);

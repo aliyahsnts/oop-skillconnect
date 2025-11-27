@@ -138,8 +138,11 @@ public class Auth {
         int newId = userManager.nextId();
         if (userType == 1) {
             newUser = new Jobseeker(newId, fullName, username, password, 0.0);
-        } else {
+        } else if (userType == 2) {
             newUser = new Recruiter(newId, fullName, username, password, 0.0);
+        } else {
+            System.out.println("ERROR: Invalid user type.");
+                return;
         }
 
         userManager.addUser(newUser);

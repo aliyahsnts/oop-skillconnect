@@ -1,28 +1,38 @@
 import java.util.Scanner;
-import managers.*;
-import models.*;
-import ui.*;
+
+import managers.UserManager;
+import managers.JobPostingManager;
+import managers.ApplicationManager;
+
 import utils.Refresh;
 import auth.Auth;
 
-// Main class handles program flow and menu
+// models + menus
+import models.User;
+import models.Admin;
+import models.Jobseeker;
+import models.Recruiter;
+
+import ui.AdminMenu;
+import ui.JobseekerMenu;
+import ui.RecruiterMenu;
+
 public class Main {
     public static void main(String[] args) {
+
         Scanner sc = new Scanner(System.in);
+
         UserManager userManager = new UserManager("data/users.csv");
-        JobPostingManager jobPostingManager = new JobPostingManager("data/jobpostings.csv");
+        JobPostingManager jobPostingManager = new JobPostingManager("data/jobs.csv");
         ApplicationManager applicationManager = new ApplicationManager("data/applications.csv");
-        ProductManager productManager = new ProductManager("data/products.csv");
-        TransactionManager transactionManager = new TransactionManager("data/transactions.csv");
-        ReportManager reportManager = new ReportManager("data/reports.csv");
 
-
-        // Initialize Auth with managers
-        Auth.init(userManager, jobPostingManager, applicationManager, productManager, transactionManager, reportManager);
+        // initialize Auth
+        Auth.init(userManager, jobPostingManager, applicationManager);
 
         while (true) {
-            Refresh.refreshTerminal(); 
-            // Display Login/Register Menu
+
+            Refresh.refreshTerminal();
+            
             // Centered ASCII Art Header - SKILL CONNECT with Box
             System.out.println();
             System.out.println("╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗");
@@ -53,17 +63,41 @@ public class Main {
             String choice = sc.nextLine();
             System.out.println("                                └─────────────────────────────────┘");
 
-            // Handle menu choices
             switch (choice) {
-                case "1" -> Auth.login();
-                case "2" -> Auth.register();
-                case "0" -> {
-                    System.out.println("Exiting program...");
-                    Refresh.refreshTerminal(); 
-                    sc.close();
-                    System.exit(0);
+
+                case "1" -> {
+                    User loggedIn = Auth.login();
+
+                    if (loggedIn == null) continue;
+
+                    int type = loggedIn.getUserType();  // 1 = jobseeker, 2 = recruiter, 3 = admin
+
+                    switch (type) {
+                        case 1 -> {
+                            Jobseeker js = (Jobseeker) loggedIn;
+                            new JobseekerMenu(js, jobPostingManager, applicationManager).show();
+                        }
+                        case 2 -> {
+                            Recruiter rec = (Recruiter) loggedIn;
+                            new RecruiterMenu(rec, jobPostingManager, applicationManager).show();
+                        }
+                        case 3 -> {
+                            Admin admin = (Admin) loggedIn;
+                            new AdminMenu(admin, userManager, jobPostingManager, applicationManager).show();
+                        }
+                        default -> System.out.println("Unknown user type.");
+                    }
                 }
-                default -> System.out.println("ERROR: Invalid option. Please enter either ‘1’ for Login, ‘2’ for Register, or ‘0’ to Exit.");
+
+                case "2" -> Auth.register();
+
+                case "0" -> {
+                    System.out.println("                                  Exiting program...");
+                    sc.close();
+                    return;
+                }
+
+                default -> System.out.println("                               Invalid option.");
             }
         }
     }

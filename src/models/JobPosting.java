@@ -6,15 +6,18 @@ public class JobPosting {
     private String hoursNeeded;
     private double payment;
     private String status; // e.g., Available, Closed
+    private String recruiterName;
+
 
     //constructor
-    public JobPosting(int jobId, String jobName, String description, String hoursNeeded, double payment, String status) {
+    public JobPosting(int jobId, String jobName, String description, String hoursNeeded, double payment, String status, String recruiterName) {
         this.jobId = jobId;
         this.jobName = jobName;
         this.description = description;
         this.hoursNeeded = hoursNeeded;
         this.payment = payment;
         this.status = status;
+        this.recruiterName = recruiterName;
     }
 
     //getters
@@ -24,6 +27,7 @@ public class JobPosting {
     public String getHoursNeeded() { return hoursNeeded; }
     public double getPayment() { return payment; }
     public String getStatus() { return status; }
+    public String getRecruiterName() { return recruiterName; }
 
     //setters
     public void setJobName(String jobName) { this.jobName = jobName; }
@@ -34,18 +38,22 @@ public class JobPosting {
 
     // CSV line representation (escape commas in text simply)
     public String toCSVLine() {
-        return jobId + "," + escape(jobName) + "," + escape(description) + "," + escape(hoursNeeded) + "," + payment + "," + escape(status);
+        return jobId + "," + escape(jobName) + "," + escape(description) + "," + escape(hoursNeeded) + "," + payment + "," + escape(status) + escape(recruiterName);
     }
 
     //methods
     //display string - display jobs as string
     public String displayString() {
-        return "Job ID: " + jobId +
-               "\nJob Name: " + jobName +
-               "\nDescription: " + description +
-               "\nHours Needed: " + hoursNeeded +
-               "\nPayment: " + payment +
-               "\nStatus: " + status;
+        return 
+        "-----------------------------" +
+            "Job ID: " + jobId +
+            "\nJob Name: " + jobName +
+            "\nDescription: " + description +
+            "\nHours Needed: " + hoursNeeded +
+            "\nPayment: " + payment +
+            "\nStatus: " + status +
+            "\nRecruiter: " + recruiterName +
+            "\n-----------------------------";
     }
 
     //escape - replace "," with " " 

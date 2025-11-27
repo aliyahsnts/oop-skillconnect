@@ -2,6 +2,7 @@ package managers;
 import java.nio.file.*;
 import java.util.*;
 
+import models.Application;
 import models.JobPosting;  
 import utils.CSVHelper;  
 
@@ -17,7 +18,8 @@ public class JobPostingManager {
     public JobPostingManager(String csvFilePath) {
         this.csvPath = Paths.get(csvFilePath);
         CSVHelper.ensureFileWithHeader(csvPath, HEADER);
-        load();
+        load(); //load jobs
+        loadApplications();   // load applications
     }
 
     // load - loading data from csv
@@ -45,10 +47,37 @@ public class JobPostingManager {
                 String hours = p[3].trim();
                 double payment = Double.parseDouble(p[4].trim());
                 String status = p[5].trim();
-                jobs.add(new JobPosting(jobId, jobName, desc, hours, payment, status));
+                String recruiterName = p[6].trim();
+                jobs.add(new JobPosting(jobId, jobName, desc, hours, payment, status, recruiterName));
             } catch (NumberFormatException e) {
                 System.err.println("Skipping invalid job line: " + line);
             }
+        }
+    }
+
+    // NEW: LOAD applications from CSV
+    private void loadApplications() {
+        Application application = new Application(0, 0, 0, HEADER, HEADER);
+        application.clear();
+
+        Path appPath = Paths.get("data/applications.csv");
+
+        CSVHelper.ensureFileWithHeader(appPath,
+            "applicationId,jobId,applicantId,applicantName,status");
+
+        List<String> lines = CSVHelper.readAllLines(appPath);
+
+        for (int i = 1; i < lines.size(); i++) {
+            String[] p = CSVHelper.split(lines.get(i));
+            if (p.length < 5) continue;
+
+            application.add(new Application(
+                Integer.parseInt(p[0].trim()),  // applicationId
+                Integer.parseInt(p[1].trim()),  // jobId
+                Integer.parseInt(p[2].trim()),  // applicantId
+                p[3].trim(),                     // applicantName
+                p[4].trim()                      // status
+            ));
         }
     }
 
@@ -62,19 +91,52 @@ public class JobPostingManager {
         return jobs.stream().filter(j -> j.getJobId() == id).findFirst().orElse(null);
     }
 
+    //return jobs by recruiterID
+    public List<JobPosting> findByRecruiter(String name) {
+        List<JobPosting> result = new ArrayList<>();
+        for (JobPosting j : jobs) {
+            if (j.getRecruiterName().equalsIgnoreCase(name)) {
+                result.add(j);
+            }
+        }
+        return result;
+    }
+
+    //find by applicationID
+    public List<Application> findByApplicantId(int applicantId) {
+        List<Application> result = new ArrayList<>();
+        for (Application app : application) {
+            if (app.getApplicantId() == applicantId) {
+                result.add(app);
+            }
+        }
+        return result;
+    }
+
     // create Job Posting - generate id, create job obj j with default Available status, add to memory, save to CSV, return j
-    public JobPosting create(String jobName, String description, String hoursNeeded, double payment) {
-        int id = nextId();
-        JobPosting j = new JobPosting(id, jobName, description, hoursNeeded, payment, "Available");
-        jobs.add(j);
+    public JobPosting create(String name, String desc, String hours,
+                             double payment, String recruiterName) {
+
+        JobPosting job = new JobPosting(
+            nextId(),
+            name,
+            desc,
+            hours,
+            payment,
+            "Available",
+            recruiterName
+        );
+
+        jobs.add(job);
         persist();
-        return j;
+        return job;
     }
 
    // update - find job by id. update only if if fields are not null or empty. save to csv then return true if job existed and is updated successfully. otherwise, return false
     public boolean update(int jobId, String jobName, String description, String hoursNeeded, Double payment, String status) {
         JobPosting j = findById(jobId);
         if (j == null) return false;
+        
         if (jobName != null && !jobName.isEmpty()) j.setJobName(jobName);
         if (description != null && !description.isEmpty()) j.setDescription(description);
         if (hoursNeeded != null && !hoursNeeded.isEmpty()) j.setHoursNeeded(hoursNeeded);
