@@ -71,6 +71,7 @@ public class JobseekerMenu {
             System.out.println("2. My Applications");
             System.out.println("3. Market");
             System.out.println("4. Reports");
+            System.out.println("5. Do Job"); 
             System.out.println("0. Logout");
             System.out.print("Enter your choice: ");
 
@@ -80,7 +81,8 @@ public class JobseekerMenu {
                 case 1 -> browseJobs();           
                 case 2 -> viewMyApplications();   
                 case 3 -> displayMarketMenu();    
-                case 4 -> displayReportMenu();    
+                case 4 -> displayReportMenu(); 
+                case 5 -> doJobMenu();   
                 case 0 -> {
                     System.out.println("Logging out...");
                     return;
@@ -448,4 +450,87 @@ private void withdrawApplication() {
             }
         }
     }
+
+private List<Application> getHiredApplications() {
+    List<Application> hired = new ArrayList<>();
+
+    List<Application> myApps = am.findByApplicantId(jobseeker.getId());
+    for (Application a : myApps) {
+        if (a.getStatus().equalsIgnoreCase("Hired")) {
+            hired.add(a);
+        }
+    }
+    return hired;
 }
+
+private void doJobMenu() {
+    System.out.println("\n===== DO JOB =====");
+
+    List<Application> hired = getHiredApplications();
+
+    if (hired.isEmpty()) {
+        System.out.println("You do not have any accepted applications yet.");
+        System.out.println("Apply for jobs first.");
+        return;
+    }
+
+    System.out.println("Select a job to work on:");
+    int index = 1;
+
+    for (Application a : hired) {
+        JobPosting jp = jpm.findById(a.getJobId());
+        if (jp != null) {
+            System.out.println(index + ". " + jp.getName() + " (Job ID: " + jp.getJobId() + ")");
+        }
+        index++;
+    }
+
+    System.out.println("0. Back");
+    System.out.print("Enter choice: ");
+    int choice = readInt();
+
+    if (choice == 0) return;
+    if (choice < 1 || choice > hired.size()) {
+        System.out.println("Invalid choice.");
+        return;
+    }
+
+    Application selectedApp = hired.get(choice - 1);
+    JobPosting job = jpm.findById(selectedApp.getJobId());
+
+    if (job == null) {
+        System.out.println("Job data not found.");
+        return;
+    }
+
+    doJobTasks(job);
+}
+
+private void doJobTasks(JobPosting job) {
+    System.out.println("\n===== WORKING ON THE JOB =====");
+    System.out.println("Job: " + job.getName());
+
+    System.out.println("You perform tasks...");
+    System.out.println("* Typing...");
+    System.out.println("* Reviewing...");
+    System.out.println("* Completing assignment...");
+
+    System.out.println("\nJob Complete! You earned +₱150.");
+    walletBalance += 150;
+
+    System.out.println("New Wallet Balance: ₱" + walletBalance);
+
+    // Find and update the application status to "Completed"
+    List<Application> myApps = am.findByApplicantId(jobseeker.getId());
+    for (Application a : myApps) {
+        if (a.getJobId() == job.getJobId() && a.getStatus().equalsIgnoreCase("Hired")) {
+            am.updateStatus(a.getApplicationId(), "Completed");
+            System.out.println("Application status updated to: Completed");
+            break;
+        }
+    }
+}
+
+}
+
+
