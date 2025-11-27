@@ -2,6 +2,8 @@ import java.util.Scanner;
 import managers.*;
 import utils.Refresh;
 import auth.Auth;
+import auth.LoginAuth;
+import auth.RegisterAuth;
 
 // Main class handles program flow and menu
 public class Main {
@@ -17,6 +19,9 @@ public class Main {
 
         // Initialize Auth with managers
         Auth.init(userManager, jobPostingManager, applicationManager, productManager, transactionManager, reportManager);
+        LoginAuth loginAuth = new LoginAuth();
+        RegisterAuth registerAuth = new RegisterAuth();
+
 
         while (true) {
             Refresh.refreshTerminal(); 
@@ -53,8 +58,8 @@ public class Main {
 
             // Handle menu choices
             switch (choice) {
-                case "1" -> Auth.login();
-                case "2" -> Auth.register();
+                case "1" -> loginAuth.login();
+                case "2" -> registerAuth.register();
                 case "0" -> {
                     System.out.println("Exiting program...");
                     Refresh.refreshTerminal(); 

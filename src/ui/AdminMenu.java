@@ -223,7 +223,7 @@ public class AdminMenu {
     }
 
     private void viewAllJobs() {
-        List<Object> list = jpm.findAll();
+        List<JobPosting> list = jpm.findAll();
         if (list.isEmpty()) {
             System.out.println("No job postings found.");
             return;

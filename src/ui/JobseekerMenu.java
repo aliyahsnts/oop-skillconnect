@@ -54,7 +54,7 @@ public class JobseekerMenu {
     }
 
     private void browseJobs() {
-        List<Object> list = jpm.findAll();
+        List<JobPosting> list = jpm.findAll();
         if (list.isEmpty()) {
             System.out.println("No job postings available.");
             return;

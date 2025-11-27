@@ -1,2 +1,7 @@
 id,fullName,username,password,userType,money
 1,Janel Shian,Shian,123,1,0.0
+2,Jobseeker,jobseeker,123,1,0.0
+3,Recruit,recruit,abc,2,0.0
+4,Test,admin,123,3,0.0
+5,Hi,randomadmin,123,3,0.0
+6,John,john,123,1,0.0
