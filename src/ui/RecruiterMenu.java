@@ -9,9 +9,6 @@ public class RecruiterMenu {
     private Recruiter recruiter;
     private JobPostingManager jpm;
     private ApplicationManager am;
-    private ProductManager pm;
-    private TransactionManager tm;
-    private ReportManager rm;
     private Scanner scanner = new Scanner(System.in);
 
     // Constructor
@@ -20,9 +17,6 @@ public class RecruiterMenu {
         this.recruiter = recruiter;
         this.jpm = jpm;
         this.am = am;
-        this.pm = pm;
-        this.tm = tm;
-        this.rm = rm;
     }
 
     public void show() {
@@ -61,9 +55,9 @@ public class RecruiterMenu {
         System.out.print("Enter payment amount: ");
         double payment = readDouble();
         
-        jpm.create(name, desc, hours, payment, recruiter.getFullName());
+        JobPosting job = jpm.create(name, desc, hours, payment, recruiter.getFullName());
 
-        System.out.println("SUCCESS: Job post for [" + name + "] successfully created! (Job ID: " + jpm.getJobId() + ")");
+        System.out.println("SUCCESS: Job post for [" + name + "] successfully created! (Job ID: " + job.getJobId() + ")");
     }
 
     private void viewAllJobs() {

@@ -63,6 +63,13 @@ public class ApplicationManager {
         return apps.stream().filter(a -> a.getApplicationId() == applicationId).findFirst().orElse(null);
     }
 
+    //return applications by ApplicantID
+    public List<Application> findByApplicantId(int applicantId) {
+        List<Application> result = new ArrayList<>();
+        for (Application a : apps) if (a.getApplicantId() == applicantId) result.add(a);
+        return result;
+    }
+
     // create Application - generate id, create application obj a with default Pending status, add to memory, save to CSV, return a
     public Application create(int jobId, int applicantId, String applicantName) {
         int id = nextId();

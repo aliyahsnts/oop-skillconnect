@@ -34,9 +34,9 @@ public class Auth {
         reportManager = rm;
     }
 
-    // ====================
-    //    LOGIN FUNCTION
-    // ====================
+    // =========================================
+    //             LOGIN FUNCTION
+    // =========================================
     public static void login() {
         System.out.print("Enter username: ");
         String username = sc.nextLine();

@@ -1,7 +1,5 @@
 import java.util.Scanner;
 import managers.*;
-import models.*;
-import ui.*;
 import utils.Refresh;
 import auth.Auth;
 

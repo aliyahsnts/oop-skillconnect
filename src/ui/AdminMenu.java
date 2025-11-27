@@ -10,9 +10,7 @@ public class AdminMenu {
     private Admin admin;
     private UserManager userManager;
     private JobPostingManager jpm;
-    private ApplicationManager am;
     private ProductManager pm;
-    private TransactionManager tm;
     private ReportManager rm;
     private Scanner scanner = new Scanner(System.in);
 
@@ -22,9 +20,7 @@ public class AdminMenu {
         this.admin = admin;
         this.userManager = um;
         this.jpm = jpm;
-        this.am = am;
         this.pm = pm;
-        this.tm = tm;
         this.rm = rm;
     }
     // show - display menu

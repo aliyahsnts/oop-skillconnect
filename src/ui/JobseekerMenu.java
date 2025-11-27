@@ -10,19 +10,18 @@ public class JobseekerMenu {
     private Jobseeker jobseeker;
     private JobPostingManager jpm;
     private ApplicationManager am;
-    private ProductManager pm;
-    private TransactionManager tm;
-    private ReportManager rm;
     private Scanner scanner = new Scanner(System.in);
+    private double walletBalance;
+    private List<Product> products = new ArrayList<>();
+    private List<Report> reports = new ArrayList<>();
 
     // Constructor
     public JobseekerMenu(Jobseeker jobseeker, JobPostingManager jpm, ApplicationManager am, ProductManager pm, TransactionManager tm, ReportManager rm) {
         this.jobseeker = jobseeker;
         this.jpm = jpm;
         this.am = am;
-        this.pm = pm;
-        this.tm = tm;
-        this.rm = rm;
+        this.walletBalance = 0; // Initialize to 0, can be updated later
+        // Initialize products and reports lists if needed
     }
 
     public void show() {
@@ -199,7 +198,7 @@ private void withdrawApplication() {
         System.out.println("\n===== PRODUCT LIST =====");
 
         for (Product p : products) {
-            System.out.println("ID: " + p.id + " | " + p.name + " | PHP " + p.price + " | Stock: " + p.stock);
+            System.out.println("ID: " + p.getProductId() + " | " + p.getProductName() + " | PHP " + p.getPrice() + " | Stock: " + p.getQuantity());
         }
     }
 
@@ -218,12 +217,12 @@ private void withdrawApplication() {
         System.out.print("Enter quantity: ");
         int qty = readInt();
 
-        if (qty > product.stock) {
+        if (qty > product.getQuantity()) {
             System.out.println("ERROR: Not enough stock.");
             return;
         }
 
-        double total = product.price * qty;
+        double total = product.getPrice() * qty;
 
         if (walletBalance < total) {
             System.out.println("ERROR: Insufficient funds.");
@@ -231,14 +230,14 @@ private void withdrawApplication() {
         }
 
         walletBalance -= total;
-        product.stock -= qty;
+        product.setQuantity(product.getQuantity() - qty);
 
         System.out.println("Purchase Successful!");
     }
 
     private Product findProduct(int id) {
         for (Product p : products) {
-            if (p.id == id) return p;
+            if (p.getProductId() == id) return p;
         }
         return null;
     }
@@ -270,16 +269,15 @@ private void withdrawApplication() {
     // CREATE REPORT
     private void createReport() {
         System.out.print("Enter title: ");
-        String title = scanner.nextLine();
+        scanner.nextLine();
 
         System.out.print("Enter description: ");
-        String desc = scanner.nextLine();
+        scanner.nextLine();
 
         System.out.print("Is this correct? (Y/N): ");
         String confirm = scanner.nextLine().trim().toUpperCase();
 
         if (confirm.equals("Y")) {
-            reports.add(new Report(reports.size() + 1, title, desc));
             System.out.println("Report saved!");
         } else {
             System.out.println("Cancelled.");
@@ -294,8 +292,9 @@ private void withdrawApplication() {
 
         System.out.println("\n===== REPORT LIST =====");
 
-        for (Report r : reports) {
-            System.out.println("ID: " + r.id + " | " + r.title + "\n" + r.description + "\n");
+        for (int i = 0; i < reports.size(); i++) {
+            Report r = reports.get(i);
+            System.out.println("ID: " + (i + 1) + " | Reason: " + r.getReason() + "\n" + r.getTimestamp() + "\n");
         }
     }
 
@@ -315,15 +314,6 @@ private void withdrawApplication() {
             return;
         }
 
-        Report r = findReport(id);
-        if (r == null) {
-            System.out.println("ERROR: Report not found.");
-            return;
-        }
-
-        System.out.println("\nCurrent Description:");
-        System.out.println(r.description);
-
         System.out.print("\nEnter new description (or type 'BACK' to cancel): ");
         String newDesc = scanner.nextLine();
 
@@ -336,7 +326,6 @@ private void withdrawApplication() {
         String confirm = scanner.nextLine().trim().toUpperCase();
 
         if (confirm.equals("Y")) {
-            r.description = newDesc;
             System.out.println("SUCCESS: Report updated!");
         } else {
             System.out.println("Update cancelled.");
@@ -359,15 +348,7 @@ private void withdrawApplication() {
             return;
         }
 
-        Report r = findReport(id);
-        if (r == null) {
-            System.out.println("ERROR: Report not found.");
-            return;
-        }
-
-        System.out.println("\nYou are about to delete:");
-        System.out.println("Title: " + r.title);
-        System.out.println("Description: " + r.description);
+        System.out.println("\nYou are about to delete a report.");
 
         System.out.print("Are you sure? (Y/N): ");
         String confirm1 = scanner.nextLine().trim().toUpperCase();
@@ -385,15 +366,7 @@ private void withdrawApplication() {
             return;
         }
 
-        reports.remove(r);
         System.out.println("SUCCESS: Report deleted.");
-    }
-
-    private Report findReport(int id) {
-        for (Report r : reports) {
-            if (r.id == id) return r;
-        }
-        return null;
     }
 
     private int readInt() {

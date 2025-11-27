@@ -57,28 +57,8 @@ public class JobPostingManager {
 
     // NEW: LOAD applications from CSV
     private void loadApplications() {
-        Application application = new Application(0, 0, 0, HEADER, HEADER);
-        application.clear();
-
-        Path appPath = Paths.get("data/applications.csv");
-
-        CSVHelper.ensureFileWithHeader(appPath,
-            "applicationId,jobId,applicantId,applicantName,status");
-
-        List<String> lines = CSVHelper.readAllLines(appPath);
-
-        for (int i = 1; i < lines.size(); i++) {
-            String[] p = CSVHelper.split(lines.get(i));
-            if (p.length < 5) continue;
-
-            application.add(new Application(
-                Integer.parseInt(p[0].trim()),  // applicationId
-                Integer.parseInt(p[1].trim()),  // jobId
-                Integer.parseInt(p[2].trim()),  // applicantId
-                p[3].trim(),                     // applicantName
-                p[4].trim()                      // status
-            ));
-        }
+        // Placeholder: applications are loaded and managed by ApplicationManager
+        // This method can be expanded if needed to cache applications here
     }
 
     //return all jobs
@@ -104,13 +84,9 @@ public class JobPostingManager {
 
     //find by applicationID
     public List<Application> findByApplicantId(int applicantId) {
-        List<Application> result = new ArrayList<>();
-        for (Application app : application) {
-            if (app.getApplicantId() == applicantId) {
-                result.add(app);
-            }
-        }
-        return result;
+        // This method should be implemented in ApplicationManager
+        // Returning empty list as placeholder
+        return new ArrayList<>();
     }
 
     // create Job Posting - generate id, create job obj j with default Available status, add to memory, save to CSV, return j

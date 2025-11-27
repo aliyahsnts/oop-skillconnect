@@ -23,6 +23,7 @@ public class JobPosting {
     //getters
     public final int getJobId() { return jobId; }
     public String getJobName() { return jobName; }
+    public String getName() { return jobName; }  // Alias for compatibility
     public String getDescription() { return description; }
     public String getHoursNeeded() { return hoursNeeded; }
     public double getPayment() { return payment; }
