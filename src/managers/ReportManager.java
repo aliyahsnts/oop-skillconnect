@@ -1,61 +1,68 @@
 package managers;
 
-import java.nio.file.*;
-import java.util.*;
 import models.Report;
-import utils.CSVHelper;
 
-public class ReportManager {
-    private final Path csvPath;
-    private final String HEADER = "reportId,reporterId,reporterName,reportedUserId,reportedUsername,reason,timestamp,status";
-    private final List<Report> reports = new ArrayList<>();
+public class ReportManager extends BaseManager<Report> {
 
     public ReportManager(String csvFilePath) {
-        this.csvPath = Paths.get(csvFilePath);
-        CSVHelper.ensureFileWithHeader(csvPath, HEADER);
-        load();
+        super(csvFilePath, "reportId,reporterId,reporterName,reportedUserId,reportedUsername,reason,timestamp,status");
     }
 
-    private void load() {
-        reports.clear();
-        List<String> lines = CSVHelper.readAllLines(csvPath);
-        if (lines.size() <= 1) return;
+    // =========================================
+    //        IMPLEMENT ABSTRACT METHODS
+    // =========================================
 
-        for (int i = 1; i < lines.size(); i++) {
-            String line = lines.get(i).trim();
-            if (line.isEmpty()) continue;
-            String[] p = CSVHelper.split(line);
-            if (p.length < 8) continue;
-
-            try {
-                int reportId = Integer.parseInt(p[0].trim());
-                int reporterId = Integer.parseInt(p[1].trim());
-                String reporterName = p[2].trim();
-                int reportedUserId = Integer.parseInt(p[3].trim());
-                String reportedUsername = p[4].trim();
-                String reason = p[5].trim();
-                String timestamp = p[6].trim();
-                String status = p[7].trim();
-                reports.add(new Report(reportId, reporterId, reporterName, reportedUserId, reportedUsername, reason, timestamp, status));
-            } catch (NumberFormatException e) {
-                System.err.println("Skipping invalid report line: " + line);
-            }
-        }
+    @Override
+    protected Report parseEntity(String[] parts) {
+        int reportId = Integer.parseInt(parts[0].trim());
+        int reporterId = Integer.parseInt(parts[1].trim());
+        String reporterName = parts[2].trim();
+        int reportedUserId = Integer.parseInt(parts[3].trim());
+        String reportedUsername = parts[4].trim();
+        String reason = parts[5].trim();
+        String timestamp = parts[6].trim();
+        String status = parts[7].trim();
+        
+        return new Report(reportId, reporterId, reporterName, reportedUserId, 
+                         reportedUsername, reason, timestamp, status);
     }
 
-    public List<Report> findAll() {
-        return new ArrayList<>(reports);
+    @Override
+    protected String toCSVLine(Report report) {
+        return report.toCSVLine();
     }
 
-    public Report findById(int id) {
-        return reports.stream().filter(r -> r.getReportId() == id).findFirst().orElse(null);
+    @Override
+    protected int getId(Report report) {
+        return report.getReportId();
     }
 
-    public Report create(int reporterId, String reporterName, int reportedUserId, String reportedUsername, String reason) {
+    @Override
+    protected int getMinimumColumns() {
+        return 8;
+    }
+
+    @Override
+    protected String getEntityName() {
+        return "report";
+    }
+
+    @Override
+    protected int getStartingId() {
+        return 4001;
+    }
+
+    // =========================================
+    //           CREATE & UPDATE
+    // =========================================
+
+    public Report create(int reporterId, String reporterName, int reportedUserId, 
+                        String reportedUsername, String reason) {
         int id = nextId();
         String timestamp = Report.getCurrentTimestamp();
-        Report r = new Report(id, reporterId, reporterName, reportedUserId, reportedUsername, reason, timestamp, "Pending");
-        reports.add(r);
+        Report r = new Report(id, reporterId, reporterName, reportedUserId, 
+                             reportedUsername, reason, timestamp, "Pending");
+        entities.add(r);
         persist();
         return r;
     }
@@ -66,24 +73,5 @@ public class ReportManager {
         r.setStatus(newStatus);
         persist();
         return true;
-    }
-
-    public boolean delete(int id) {
-        boolean removed = reports.removeIf(r -> r.getReportId() == id);
-        if (removed) persist();
-        return removed;
-    }
-
-    public int nextId() {
-        return reports.stream().mapToInt(Report::getReportId).max().orElse(4000) + 1;
-    }
-
-    private void persist() {
-        List<String> out = new ArrayList<>();
-        out.add(HEADER);
-        for (Report r : reports) {
-            out.add(r.toCSVLine());
-        }
-        CSVHelper.writeAllLines(csvPath, out);
     }
 }

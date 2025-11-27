@@ -99,9 +99,9 @@ public class Auth {
         }
     }
 
-    // ====================
-    //  REGISTER FUNCTION
-    // ====================
+    // =========================================
+    //           REGISTER FUNCTION
+    // =========================================
 
     public static void register() {
         System.out.print("Enter full name: ");
@@ -149,4 +149,5 @@ public class Auth {
         System.out.println("SUCCESS: Account created successfully!");
         Refresh.refreshTerminal(); 
     }
+    
 }
