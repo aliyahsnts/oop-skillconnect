@@ -57,6 +57,13 @@ public class ResumeGenerator {
         return filePath;
     }
 
+    /**
+     * Backwards-compatible wrapper used by UI code that calls `generateCSV`.
+     */
+    public static Path generateCSV(Jobseeker jobseeker) throws IOException {
+        return generateCSVForRegistration(jobseeker);
+    }
+
     // Helper: avoid nulls
     private static String safe(String s) {
         return (s == null || s.isBlank()) ? "N/A" : s;

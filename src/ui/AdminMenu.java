@@ -277,7 +277,8 @@ public class AdminMenu {
                 desc.isEmpty() ? null : desc,
                 hours.isEmpty() ? null : hours,
                 payment,
-                status.isEmpty() ? null : status);
+            status.isEmpty() ? null : status,
+            null);
 
         if (ok) System.out.println("SUCCESS: Job successfully updated!");
         else System.out.println("ERROR: Could not update job.");

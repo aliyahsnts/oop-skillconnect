@@ -1,5 +1,7 @@
 package ui;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +24,7 @@ public class JobseekerMenu {
         this.jobseeker = jobseeker;
         this.jpm = jpm;
         this.am = am;
-        this.walletBalance = 0; // Initialize to 0, can be updated later
-        // Initialize products and reports lists if needed
+        this.walletBalance = jobseeker.getMoney(); 
     }
 
     public void show() {
@@ -32,34 +33,234 @@ public class JobseekerMenu {
             System.out.println("Welcome, " + jobseeker.getFullName() + "!");
             System.out.println("1. Browse Jobs");
             System.out.println("2. My Applications");
-            System.out.println("3. Market");
-            System.out.println("4. Reports");
+            System.out.println("3. Marketplace");
+            System.out.println("4. My Reports");
             System.out.println("5. Do Job");
-            System.out.println("6. Edit My Résumé");   // <-- NEW
+            System.out.println("6. Update Resume"); 
             System.out.println("0. Logout");
             System.out.print("Enter your choice: ");
 
-            int choice = readInt();
-
-            switch (choice) {
-                case 1 -> browseJobs();
-                case 2 -> viewMyApplications();
-                case 3 -> displayMarketMenu();
-                case 4 -> displayReportMenu();
-                case 5 -> doJobMenu();
-                case 6 -> editResume();              // <-- NEW
-                case 0 -> {
+            switch (scanner.nextLine().trim()) {
+                case "1" -> browseJobs();
+                case "2" -> viewApplications();
+                case "3" -> displayMarketMenu();
+                case "4" -> displayReportMenu();
+                case "5" -> doJob();
+                case "6" -> displayResumeMenu();
+                case "0" -> {
                     System.out.println("Logging out...");
                     return;
                 }
-                default -> System.out.println("ERROR: Invalid option. Please try again.");
+                default -> System.out.println("Invalid choice. Please try again.");
+            }
+        }
+    }
+    
+    /* ====================  JOBS  ==================== */
+
+    private void browseJobs() {
+        System.out.println("\n--- Available Job Postings ---");
+        List<JobPosting> availableJobs = jpm.findAll().stream()
+            .filter(j -> j.getStatus().equalsIgnoreCase("Available"))
+            .toList();
+
+        if (availableJobs.isEmpty()) {
+            System.out.println("No available jobs found.");
+            return;
+        }
+
+        for (JobPosting job : availableJobs) {
+            System.out.println(job.displayString()); // Displays questions now
+            System.out.println("-------------------------------------");
+        }
+
+        System.out.print("\nEnter Job ID to apply for (or 0 to cancel): ");
+        int jobId = readInt();
+
+        if (jobId != 0) {
+            JobPosting job = jpm.findById(jobId);
+            if (job != null && job.getStatus().equalsIgnoreCase("Available")) {
+                applyForJob(job);
+            } else {
+                System.out.println("ERROR: Invalid Job ID or job is not available.");
             }
         }
     }
 
-    /* ====================  RESUME EDITOR  ==================== */
+    // UPDATED: Apply for Job logic
+    private void applyForJob(JobPosting job) {
+        // 1. Check if already applied
+        boolean alreadyApplied = am.findByApplicantId(jobseeker.getId()).stream()
+            .anyMatch(a -> a.getJobId() == job.getJobId());
+        
+        if (alreadyApplied) {
+            System.out.println("ERROR: You have already applied for this job.");
+            return;
+        }
+        
+        System.out.println("\n--- Applying for: " + job.getJobName() + " ---");
+
+        List<String> questions = job.getApplicationQuestions();
+        List<String> answers = new ArrayList<>();
+        
+        // 2. Fill out Application Form (if questions exist)
+        if (questions != null && !questions.isEmpty()) {
+            System.out.println("\n--- Application Form Required ---");
+            for (int i = 0; i < questions.size(); i++) {
+                System.out.println("Q" + (i + 1) + ": " + questions.get(i));
+                System.out.print("Your Answer: ");
+                // Read answer and sanitize for internal CSV storage
+                String answer = scanner.nextLine().trim().replace(",", " ").replace(";", " ");
+                answers.add(answer);
+            }
+        }
+        
+        // 3. Attach Resume
+        String resumePath;
+        try {
+            // Generate/Update the resume CSV file and get its path
+            Path path = ResumeGenerator.generateCSV(jobseeker);
+            resumePath = path.toString();
+            System.out.println("\nSUCCESS: Resume attached from: " + resumePath);
+        } catch (IOException e) {
+            System.out.println("ERROR: Could not generate/attach resume. Applying without a resume path.");
+            e.printStackTrace();
+            resumePath = "ERROR_FILE_GENERATION";
+        }
+
+        // 4. Create Application (using the updated ApplicationManager.create)
+        am.create(job.getJobId(), jobseeker.getId(), jobseeker.getFullName(), answers, resumePath);
+        System.out.println("\nSUCCESS: Application submitted for Job ID " + job.getJobId() + "!");
+    }
+
+    private void viewApplications() {
+        System.out.println("\n--- My Applications ---");
+        List<Application> myApps = am.findByApplicantId(jobseeker.getId());
+
+        if (myApps.isEmpty()) {
+            System.out.println("You have no applications yet.");
+            return;
+        }
+
+        for (Application app : myApps) {
+            JobPosting job = jpm.findById(app.getJobId());
+            List<String> questions = (job != null) ? job.getApplicationQuestions() : List.of();
+            
+            System.out.println(app.displayString(questions)); // Display with context
+            System.out.println("-------------------------------------");
+        }
+    }
+
+    private void doJob() {
+        List<Application> hiredApps = getHiredApplications();
+
+        if (hiredApps.isEmpty()) {
+            System.out.println("You have no jobs currently in 'Hired' status.");
+            return;
+        }
+
+        System.out.println("\n--- Hired Jobs ---");
+        for (int i = 0; i < hiredApps.size(); i++) {
+            JobPosting job = jpm.findById(hiredApps.get(i).getJobId());
+            if (job != null) {
+                System.out.printf("[%d] Job ID: %d, Name: %s\n", i + 1, job.getJobId(), job.getJobName());
+            }
+        }
+
+        System.out.print("Select job number to complete (or 0 to cancel): ");
+        int choice = readInt();
+
+        if (choice > 0 && choice <= hiredApps.size()) {
+            Application app = hiredApps.get(choice - 1);
+            JobPosting job = jpm.findById(app.getJobId());
+            if (job != null) {
+                simulateJobCompletion(job);
+            } else {
+                System.out.println("Error: Job not found.");
+            }
+        }
+    }
+
+    private void simulateJobCompletion(JobPosting job) {
+        System.out.println("\n===== WORKING ON THE JOB =====");
+        System.out.println("Job: " + job.getName());
+        System.out.println("You perform tasks...");
+        System.out.println("* Typing...\\n* Reviewing...\\n* Completing assignment...");
+        System.out.println("\nJob Complete! You earned +₱" + job.getPayment() + ".");
+        walletBalance += job.getPayment(); // Use actual payment from job
+        jobseeker.setMoney(walletBalance); // Update jobseeker's money in memory
+        
+        System.out.println("New Wallet Balance: ₱" + walletBalance);
+
+        // mark hired application completed
+        am.findByApplicantId(jobseeker.getId())
+          .stream()
+          .filter(a -> a.getJobId() == job.getJobId() && a.getStatus().equalsIgnoreCase("Hired"))
+          .findFirst()
+          .ifPresent(a -> am.updateStatus(a.getApplicationId(), "Completed"));
+    }
+
+
+    /* ====================  RESUME  ==================== */
+    
+    private void updateResume() {
+        // Reuse existing ResumeGenerator logic, but trigger the load first if not done
+        jobseeker.loadResumeFromCSV(); 
+
+        System.out.println("\n--- Update Resume Details ---");
+        System.out.println("Enter new value or leave blank to keep current value.");
+
+        System.out.print("Phone [" + nullSafe(jobseeker.getPhone()) + "]: ");
+        String phone = scanner.nextLine().trim();
+        if (!phone.isEmpty()) jobseeker.setPhone(phone);
+
+        System.out.print("Address [" + nullSafe(jobseeker.getAddress()) + "]: ");
+        String address = scanner.nextLine().trim();
+        if (!address.isEmpty()) jobseeker.setAddress(address);
+
+        System.out.print("Summary [" + nullSafe(jobseeker.getSummary()) + "]: ");
+        String summary = scanner.nextLine().trim();
+        if (!summary.isEmpty()) jobseeker.setSummary(summary);
+        
+        System.out.print("Education [" + nullSafe(jobseeker.getEducation()) + "]: ");
+        String education = scanner.nextLine().trim();
+        if (!education.isEmpty()) jobseeker.setEducation(education);
+
+
+        System.out.println("Resume details updated in memory. The resume file will be regenerated upon your next job application.");
+    }
+
+    // manageResume
+    private void displayResumeMenu() {
+        while (true) {
+            System.out.println("\n===== My Resumé =====");
+            viewResume();
+            System.out.println("1. Edit Resume");
+            System.out.println("0. Back");
+            System.out.print("Enter your choice: ");
+            switch (readInt()) {
+                case 1 -> editResume();
+                case 0 -> { return; }
+                default -> System.out.println("ERROR: Invalid selection.");
+            }
+        }
+    }
+
+    private void viewResume() {
+        System.out.println("\n==========  RÉSUMÉ  ==========");
+        Jobseeker js = this.jobseeker;
+        System.out.println("Name        : " + js.getFullName());
+        System.out.println("Phone       : " + nullSafe(js.getPhone()));
+        System.out.println("Address     : " + nullSafe(js.getAddress()));
+        System.out.println("Summary     : " + nullSafe(js.getSummary()));
+        System.out.println("Education   : " + nullSafe(js.getEducation()));
+        System.out.println("Skills      : " + listSafe(js.getSkillList()));
+        System.out.println("Experience  : " + listSafe(js.getExperienceList()));
+        System.out.println("===============================");
+    }
+
     private void editResume() {
-        System.out.println("\n====== EDIT RÉSUMÉ ======");
+        System.out.println("\n====== EDIT RESUMÉ ======");
         Jobseeker js = this.jobseeker;
 
         js.setPhone(ask("Phone number", js.getPhone()));
@@ -94,88 +295,8 @@ public class JobseekerMenu {
         String in = scanner.nextLine().trim();
         return in.isEmpty() ? current : in;
     }
-    /* ========================================================= */
 
-    private void browseJobs() {
-        List<JobPosting> list = jpm.findAll();
-        if (list.isEmpty()) {
-            System.out.println("No job postings available.");
-            return;
-        }
-        System.out.println("\n=== Available Jobs ===");
-        for (Object obj : list) {
-            JobPosting job = (JobPosting) obj;
-            System.out.println("---------------------------");
-            System.out.println(job.displayString());
-        }
-        System.out.println("---------------------------");
-        System.out.println("[1] Apply to a Job");
-        System.out.println("[0] Return to Menu");
-        System.out.print("Choose an option: ");
-        String opt = scanner.nextLine().trim();
-        if ("1".equals(opt)) applyToJob();
-    }
-
-    private void applyToJob() {
-        System.out.print("Enter Job ID to apply: ");
-        int jobId = readInt();
-        JobPosting job = jpm.findById(jobId);
-        if (job == null) {
-            System.out.println("ERROR: Job not found.");
-            return;
-        }
-        Application app = am.create(job.getJobId(), jobseeker.getId(), jobseeker.getFullName());
-        System.out.println("SUCCESS: Application submitted! (Application ID: " + app.getApplicationId() + ")");
-    }
-
-    private void viewMyApplications() {
-        List<Application> myApps = am.findByApplicantId(jobseeker.getId());
-        if (myApps.isEmpty()) {
-            System.out.println("\nYou have no applications yet.");
-            return;
-        }
-        System.out.println("\n===== MY APPLICATIONS =====");
-        for (Application a : myApps) {
-            System.out.println("-----------------------------");
-            System.out.println(a.displayString());
-            JobPosting jp = jpm.findById(a.getJobId());
-            if (jp != null) System.out.println("Job Title: " + jp.getName());
-        }
-        System.out.println("-----------------------------");
-        System.out.println("[1] Withdraw an Application");
-        System.out.println("[0] Back");
-        System.out.print("Enter choice: ");
-        String choice = scanner.nextLine().trim();
-        if ("1".equals(choice)) withdrawApplication();
-    }
-
-    private void withdrawApplication() {
-        System.out.print("Enter Application ID to withdraw: ");
-        int id = readInt();
-        Application app = am.findByApplicationId(id);
-        if (app == null) {
-            System.out.println("ERROR: Application not found.");
-            return;
-        }
-        if (app.getApplicantId() != jobseeker.getId()) {
-            System.out.println("ERROR: You can only withdraw your own applications.");
-            return;
-        }
-        if (!app.getStatus().equalsIgnoreCase("Pending")) {
-            System.out.println("ERROR: Only pending applications can be withdrawn.");
-            return;
-        }
-        System.out.print("Are you sure you want to withdraw this application? (Y/N): ");
-        String confirm = scanner.nextLine().trim();
-        if (confirm.equalsIgnoreCase("Y")) {
-            am.updateStatus(id, "Withdrawn");
-            System.out.println("SUCCESS: Application withdrawn.");
-        } else {
-            System.out.println("Cancelled.");
-        }
-    }
-
-    /* -----------  MARKET / REPORT / DO JOB  ----------- */
+    /* ====================  MARKETPLACE  ==================== */
     private void displayMarketMenu() {
         while (true) {
             System.out.println("\n===== MARKETPLACE =====");
@@ -230,6 +351,8 @@ public class JobseekerMenu {
         for (Product p : products) if (p.getProductId() == id) return p;
         return null;
     }
+
+    /* ====================  REPORTS  ==================== */
 
     private void displayReportMenu() {
         while (true) {
@@ -292,46 +415,8 @@ public class JobseekerMenu {
         System.out.println("Report deleted!");
     }
 
-    private void doJobMenu() {
-        List<Application> hired = getHiredApplications();
-        if (hired.isEmpty()) {
-            System.out.println("You do not have any accepted applications yet.");
-            return;
-        }
-        System.out.println("Select a job to work on:");
-        for (int i = 0; i < hired.size(); i++) {
-            JobPosting jp = jpm.findById(hired.get(i).getJobId());
-            System.out.println((i + 1) + ". " + (jp == null ? "Unknown" : jp.getName()) + " (Job ID: " + hired.get(i).getJobId() + ")");
-        }
-        System.out.println("0. Back");
-        System.out.print("Enter choice: ");
-        int c = readInt();
-        if (c == 0) return;
-        if (c < 1 || c > hired.size()) {
-            System.out.println("Invalid choice.");
-            return;
-        }
-        doJobTasks(jpm.findById(hired.get(c - 1).getJobId()));
-    }
-
-    private void doJobTasks(JobPosting job) {
-        if (job == null) return;
-        System.out.println("\n===== WORKING ON THE JOB =====");
-        System.out.println("Job: " + job.getName());
-        System.out.println("You perform tasks...");
-        System.out.println("* Typing...\n* Reviewing...\n* Completing assignment...");
-        System.out.println("\nJob Complete! You earned +₱150.");
-        walletBalance += 150;
-        System.out.println("New Wallet Balance: ₱" + walletBalance);
-
-        // mark hired application completed
-        am.findByApplicantId(jobseeker.getId())
-          .stream()
-          .filter(a -> a.getJobId() == job.getJobId() && a.getStatus().equalsIgnoreCase("Hired"))
-          .findFirst()
-          .ifPresent(a -> am.updateStatus(a.getApplicationId(), "Completed"));
-    }
-
+    /* ====================  HELPERS  ==================== */
+    
     private List<Application> getHiredApplications() {
         List<Application> hired = new ArrayList<>();
         for (Application a : am.findByApplicantId(jobseeker.getId()))
@@ -348,4 +433,7 @@ public class JobseekerMenu {
             }
         }
     }
+
+    private String nullSafe(String s) {  return (s == null || s.isBlank()) ? "N/A" : s; }
+    private String listSafe(List<String> list) { return list.isEmpty() ? "N/A" : String.join("; ", list); }
 }

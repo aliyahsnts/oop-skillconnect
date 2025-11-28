@@ -169,7 +169,7 @@ The Java program should now be running.
 Since our program now uses packages, running the program is now different.
 
 1. From your project root (skillconnect):
-<pre> javac -d bin -sourcepath src src\Main.java</pre>
+<pre> javac -d bin -sourcepath src src\Main.java </pre>
 
 This will create a bin folder with subfolders with files that end with .class.
 
