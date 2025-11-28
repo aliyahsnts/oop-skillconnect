@@ -1,6 +1,8 @@
 package managers;
 
 import models.Report;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ReportManager extends BaseManager<Report> {
 
@@ -73,5 +75,46 @@ public class ReportManager extends BaseManager<Report> {
         r.setStatus(newStatus);
         persist();
         return true;
+    }
+
+    // =========================================
+    //           QUERY METHODS
+    // =========================================
+
+    /**
+     * Find all reports created by a specific reporter
+     */
+    public List<Report> findByReporterId(int reporterId) {
+        return entities.stream()
+            .filter(r -> r.getReporterId() == reporterId)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Find all reports against a specific user
+     */
+    public List<Report> findByReportedUserId(int reportedUserId) {
+        return entities.stream()
+            .filter(r -> r.getReportedUserId() == reportedUserId)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Find all reports with a specific status
+     */
+    public List<Report> findByStatus(String status) {
+        return entities.stream()
+            .filter(r -> r.getStatus().equalsIgnoreCase(status))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Find pending reports by reporter
+     */
+    public List<Report> findPendingByReporter(int reporterId) {
+        return entities.stream()
+            .filter(r -> r.getReporterId() == reporterId)
+            .filter(r -> r.getStatus().equalsIgnoreCase("Pending"))
+            .collect(Collectors.toList());
     }
 }

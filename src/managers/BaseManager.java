@@ -57,7 +57,7 @@ public abstract class BaseManager<T> {
     /**
      * Save entities to CSV
      */
-    protected void persist() {
+    public void persist() {
         List<String> output = new ArrayList<>();
         output.add(header);
         

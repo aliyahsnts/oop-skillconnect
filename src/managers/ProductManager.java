@@ -1,6 +1,8 @@
 package managers;
 
 import models.Product;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ProductManager extends BaseManager<Product> {
 
@@ -75,6 +77,7 @@ public class ProductManager extends BaseManager<Product> {
             p.setPrice(price);
         if (quantity != null) {
             p.setQuantity(quantity);
+            // Auto-update status based on quantity
             p.setStatus(quantity > 0 ? "Available" : "Out of Stock");
         }
         if (status != null && !status.isEmpty()) 
@@ -82,5 +85,60 @@ public class ProductManager extends BaseManager<Product> {
             
         persist();
         return true;
+    }
+
+    // =========================================
+    //           QUERY METHODS
+    // =========================================
+
+    /**
+     * Find all available products (in stock)
+     */
+    public List<Product> findAvailable() {
+        return entities.stream()
+            .filter(p -> p.getStatus().equalsIgnoreCase("Available"))
+            .filter(p -> p.getQuantity() > 0)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Find all out of stock products
+     */
+    public List<Product> findOutOfStock() {
+        return entities.stream()
+            .filter(p -> p.getQuantity() == 0 || 
+                        p.getStatus().equalsIgnoreCase("Out of Stock"))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Find products within a price range
+     */
+    public List<Product> findByPriceRange(double minPrice, double maxPrice) {
+        return entities.stream()
+            .filter(p -> p.getPrice() >= minPrice && p.getPrice() <= maxPrice)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Decrease product quantity (for purchases)
+     */
+    public boolean decreaseQuantity(int productId, int amount) {
+        Product p = findById(productId);
+        if (p == null || p.getQuantity() < amount) return false;
+        
+        int newQuantity = p.getQuantity() - amount;
+        return update(productId, null, null, null, newQuantity, null);
+    }
+
+    /**
+     * Increase product quantity (for restocking)
+     */
+    public boolean increaseQuantity(int productId, int amount) {
+        Product p = findById(productId);
+        if (p == null || amount <= 0) return false;
+        
+        int newQuantity = p.getQuantity() + amount;
+        return update(productId, null, null, null, newQuantity, null);
     }
 }
