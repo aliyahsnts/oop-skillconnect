@@ -45,7 +45,7 @@ public class LoginAuth extends Auth {
             applicationManager,
             productManager,
             transactionManager,
-            reportManager,
+            reviewManager,
             userManager          // <-- NEW
         ).show();
 

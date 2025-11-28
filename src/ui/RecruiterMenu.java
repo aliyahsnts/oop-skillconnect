@@ -10,6 +10,9 @@ public class RecruiterMenu {
     private final Recruiter recruiter;
     private final JobPostingManager jpm;
     private final ApplicationManager am;
+    private final ProductManager pm;
+    private final TransactionManager tm;
+    private final ReviewManager vm;
     private final UserManager um;   
     private final Scanner scanner = new Scanner(System.in);
     private final ApplicationFormGenerator formGenerator = new ApplicationFormGenerator(); // Instance of the generator
@@ -20,11 +23,14 @@ public class RecruiterMenu {
                          ApplicationManager am,
                          ProductManager pm,
                          TransactionManager tm,
-                         ReportManager rm,
+                         ReviewManager vm,
                          UserManager um) {
         this.recruiter = recruiter;
         this.jpm = jpm;
         this.am = am;
+        this.pm = pm;
+        this.tm = tm;
+        this.vm = vm;
         this.um = um;               
     }
 
@@ -36,22 +42,33 @@ public class RecruiterMenu {
             System.out.println("[2] View All Job Postings");
             System.out.println("[3] Update Job Posting");
             System.out.println("[4] Delete Job Posting");
-            System.out.println("[5] View Applicants for a Job"); // NEW OPTION
+            System.out.println("[5] View Applicants for a Job"); 
+            System.out.println("[6] Deposit Funds");// NEW OPTION
+            System.out.println("[7] Withdraw Funds");
+            System.out.println("[8] Send Salary (to Jobseeker)");
+            System.out.println("[9] Purchase Product");
+            System.out.println("[10] View Transactions");
             System.out.println("[0] Logout");
             System.out.print("Enter your choice: ");
-
+        
             switch (scanner.nextLine().trim()) {
                 case "1" -> createJobPosting();
                 case "2" -> viewAllJobs();
                 case "3" -> updateJobPosting();
                 case "4" -> deleteJob();
-                case "5" -> viewApplicantsByJob(); // NEW HANDLER
+                case "5" -> viewApplicantsByJob();
+                case "6" -> depositFunds();
+                case "7" -> withdrawFunds();
+                case "8" -> sendSalary();
+                case "9" -> purchaseProduct();
+                case "10" -> viewTransactions();
                 case "0" -> {
                     System.out.println("Logging out...");
                     return;
                 }
                 default -> System.out.println("Invalid choice. Please try again.");
             }
+
         }
     }
 
@@ -277,6 +294,123 @@ public class RecruiterMenu {
         }
     }
 
+
+    // Withdraw funds for the recruiter
+    private void withdrawFunds() {
+        System.out.println("\n--- Withdraw Funds ---");
+        System.out.print("Enter amount to withdraw (₱): ");
+        double amount = readDouble();
+        if (amount <= 0) {
+            System.out.println("ERROR: Amount must be positive.");
+            return;
+        }
+
+        double balance = um.getBalance(recruiter.getId());
+        if (balance < amount) {
+            System.out.println("ERROR: Insufficient funds. Current balance: ₱" + balance);
+            return;
+        }
+
+        boolean ok = tm.withdraw(recruiter.getId(), amount, "Withdraw by recruiter");
+        System.out.println(ok ? "SUCCESS: Withdrawal completed." : "ERROR: Withdrawal failed.");
+    }
+
+    // Send salary from recruiter to jobseeker
+    private void sendSalary() {
+        System.out.println("\n--- Send Salary to Jobseeker ---");
+        System.out.print("Enter Jobseeker User ID: ");
+        int jsId = readInt();
+        User js = um.findById(jsId);
+        if (js == null) {
+            System.out.println("ERROR: Jobseeker not found.");
+            return;
+        }
+
+        System.out.print("Enter amount to send (₱): ");
+        double amount = readDouble();
+        if (amount <= 0) {
+            System.out.println("ERROR: Amount must be positive.");
+            return;
+        }
+
+        double balance = um.getBalance(recruiter.getId());
+        if (balance < amount) {
+            System.out.println("ERROR: Insufficient funds. Current balance: ₱" + balance);
+            return;
+        }
+
+        boolean ok = tm.transfer(recruiter.getId(), jsId, amount, "Salary");
+        System.out.println(ok ? "SUCCESS: Sent ₱" + amount + " to " + js.getFullName() : "ERROR: Failed to send salary.");
+    }
+
+    // Purchase product as recruiter
+    private void purchaseProduct() {
+        System.out.println("\n--- Purchase Product ---");
+        List<Product> products = pm.findAll();
+        if (products == null || products.isEmpty()) {
+            System.out.println("No products available.");
+            return;
+        }
+
+        for (Product p : products) {
+            System.out.println(p.displayString());
+            System.out.println("-------------------------------------");
+        }
+
+        System.out.print("Enter Product ID to purchase: ");
+        int pid = readInt();
+        Product product = pm.findById(pid);
+        if (product == null) {
+            System.out.println("ERROR: Product not found.");
+            return;
+        }
+
+        System.out.print("Enter quantity: ");
+        int qty = readInt();
+        if (qty <= 0) {
+            System.out.println("ERROR: Quantity must be positive.");
+            return;
+        }
+
+        double total = product.getPrice() * qty;
+        double balance = um.getBalance(recruiter.getId());
+        if (balance < total) {
+            System.out.println("ERROR: Insufficient funds. Current balance: ₱" + balance);
+            return;
+        }
+
+        // Debit recruiter balance first to ensure atomic behavior
+        boolean adjusted = um.adjustBalance(recruiter.getId(), -total);
+        if (!adjusted) {
+            System.out.println("ERROR: Failed to deduct balance; purchase aborted.");
+            return;
+        }
+
+        // Record transaction (store negative amount to reflect debit)
+        tm.create(
+            recruiter.getId(),
+            recruiter.getFullName(),
+            product.getProductId(),
+            product.getProductName(),  // <-- changed from getName()
+            qty,
+            -total);
+             System.out.println("SUCCESS: Purchased " + qty + " x " + product.getProductName() + " for $" + total + ".");
+    }
+
+    // View transaction history for recruiter
+    private void viewTransactions() {
+        System.out.println("\n--- Transaction History ---");
+        List<Transaction> txs = tm.findByUserId(recruiter.getId());
+        if (txs == null || txs.isEmpty()) {
+            System.out.println("No transactions found.");
+            return;
+        }
+        for (Transaction tx : txs) {
+            System.out.println(tx.displayString());
+            System.out.println("-------------------------------------");
+        }
+    }
+
     private int readInt() {
         while (true) {
             try {
@@ -297,6 +431,20 @@ public class RecruiterMenu {
             return 0.0;
         }
     }
+    
+    private void depositFunds() {
+    System.out.println("\n--- Deposit Funds ---");
+    System.out.print("Enter amount to deposit (₱): ");
+    double amount = readDouble();
+    if (amount <= 0) {
+        System.out.println("ERROR: Amount must be positive.");
+        return;
+    }
+
+    // Delegate deposit behavior to transaction manager
+    boolean ok = tm.deposit(recruiter.getId(), amount, "Deposit by recruiter");
+    System.out.println(ok ? "SUCCESS: Funds deposited!" : "ERROR: Deposit failed.");
+}
     
     private double readDouble() {
         while (true) {

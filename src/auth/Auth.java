@@ -13,6 +13,7 @@ public abstract class Auth {
     protected static ReportManager reportManager;
     protected static Scanner sc = new Scanner(System.in);
     protected static UserManager userManager;
+    protected static ReviewManager reviewManager;
 
     public static void init(UserManager um, JobPostingManager jpm, ApplicationManager am,
                             ProductManager pm, TransactionManager tm, ReportManager rm) {
@@ -22,6 +23,7 @@ public abstract class Auth {
         productManager = pm;
         transactionManager = tm;
         reportManager = rm;
+        reviewManager = new ReviewManager("data/reviews.csv");
     }
 
     // ============================
