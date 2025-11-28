@@ -47,6 +47,7 @@ public class LoginAuth extends Auth {
                     transactionManager,
                     reportManager,
                     userManager).show();
+                    
         case 3 -> new AdminMenu(
                     (Admin) user,
                     userManager,

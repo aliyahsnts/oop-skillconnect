@@ -3,66 +3,75 @@ package models;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class Transaction {
-    private final int transactionId;
-    private final int userId;
-    private final String username;
-    private final int productId;
-    private final String productName;
-    private final int quantity;
-    private final double totalAmount;
-    private final String timestamp;
-    private String status; // Completed, Pending, Cancelled
+import models.*;
+import managers.*;
 
-    public Transaction(int transactionId, int userId, String username, int productId, 
-                      String productName, int quantity, double totalAmount, String timestamp, String status) {
+public class Transaction {
+    private int transactionId;
+    private int fromUserId;
+    private String fromUsername;
+    private int toUserId;
+    private String toUsername;
+    private double amount;
+    private String type; // DEPOSIT, WITHDRAW, TRANSFER, PURCHASE, SALARY
+    private String description;
+    private String timestamp;
+    private String status;
+
+    // Constructor
+    public Transaction(int transactionId, int fromUserId, String fromUsername,
+                      int toUserId, String toUsername, double amount,
+                      String type, String description, String timestamp, String status) {
         this.transactionId = transactionId;
-        this.userId = userId;
-        this.username = username;
-        this.productId = productId;
-        this.productName = productName;
-        this.quantity = quantity;
-        this.totalAmount = totalAmount;
+        this.fromUserId = fromUserId;
+        this.fromUsername = fromUsername;
+        this.toUserId = toUserId;
+        this.toUsername = toUsername;
+        this.amount = amount;
+        this.type = type;
+        this.description = description;
         this.timestamp = timestamp;
         this.status = status;
     }
 
-    // Getters
+    // Getters and Setters
     public int getTransactionId() { return transactionId; }
-    public int getUserId() { return userId; }
-    public String getUsername() { return username; }
-    public int getProductId() { return productId; }
-    public String getProductName() { return productName; }
-    public int getQuantity() { return quantity; }
-    public double getTotalAmount() { return totalAmount; }
+    public int getFromUserId() { return fromUserId; }
+    public String getFromUsername() { return fromUsername; }
+    public int getToUserId() { return toUserId; }
+    public String getToUsername() { return toUsername; }
+    public double getAmount() { return amount; }
+    public String getType() { return type; }
+    public String getDescription() { return description; }
     public String getTimestamp() { return timestamp; }
     public String getStatus() { return status; }
-
-    // Setter
+    
     public void setStatus(String status) { this.status = status; }
+
+    // CSV conversion
+    public String toCSVLine() {
+        return String.format("%d,%d,%s,%d,%s,%.2f,%s,%s,%s,%s",
+            transactionId, fromUserId, fromUsername, toUserId, toUsername,
+            amount, type, description.replace(",", ";"), timestamp, status);
+    }
+
+    // Display format
+    public String displayString() {
+        return String.format("""
+            Transaction ID: %d
+            Type: %s
+            From: %s (ID: %d)
+            To: %s (ID: %d)
+            Amount: $%.2f
+            Description: %s
+            Timestamp: %s
+            Status: %s
+            """, transactionId, type, fromUsername, fromUserId,
+            toUsername, toUserId, amount, description, timestamp, status);
+    }
 
     public static String getCurrentTimestamp() {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
-
-    public String toCSVLine() {
-        return transactionId + "," + userId + "," + escape(username) + "," + productId + "," + 
-               escape(productName) + "," + quantity + "," + totalAmount + "," + 
-               escape(timestamp) + "," + escape(status);
-    }
-
-    public String displayString() {
-        return "Transaction ID: " + transactionId +
-               "\nUser: " + username + " (ID: " + userId + ")" +
-               "\nProduct: " + productName + " (ID: " + productId + ")" +
-               "\nQuantity: " + quantity +
-               "\nTotal Amount: $" + totalAmount +
-               "\nTimestamp: " + timestamp +
-               "\nStatus: " + status;
-    }
-
-    private String escape(String s) {
-        if (s == null) return "";
-        return s.replace(",", " ");
-    }
 }
+

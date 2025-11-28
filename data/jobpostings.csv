@@ -1,3 +1,2 @@
-jobId,jobName,description,hoursNeeded,payment,status,recruiterName
-101,Couch,Need a great couch to train me be the best,5,1000.0,Available,LEBRON JAMES
-102,Tutor,ajkdfjkl,2,30.0,Available,RECRUITER RC
+jobId,jobName,description,hoursNeeded,payment,status,recruiterName,applicationQuestions
+1001,English Tutor,I am looking for an English tutor who can teach secondary English grammar,30,100.0,Available,RECRUITER,Why do you deserve this job?

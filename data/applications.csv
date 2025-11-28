@@ -1,2 +1,2 @@
-applicationId,jobId,applicantId,applicantName,status
-2001,101,9,JANEL SHIAN ELLAMA,Pending
+applicationId,jobId,applicantId,applicantName,status,applicationAnswers,resumeFilePath
+2001,1001,12,NEW JB,Pending,I have 5 yrs. experience teaching English to elementary kids.,resumes\jobseeker_12_newnewjb_resume.csv

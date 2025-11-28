@@ -12,10 +12,13 @@ import utils.AsciiTable;
 import utils.Refresh;
 
 public class JobseekerMenu {
-    private final Jobseeker jobseeker;
-    private final JobPostingManager jpm;
-    private final ApplicationManager am;
-    private final Scanner scanner = new Scanner(System.in);
+    private Jobseeker jobseeker;
+    private JobPostingManager jpm;
+    private ApplicationManager am;
+    private UserManager um;
+    private TransactionManager tm;
+    private ProductManager pm;
+    private Scanner scanner = new Scanner(System.in);
 
     private final ReportHandler reportHandler;
     private final MarketplaceHandler marketplaceHandler;
@@ -30,8 +33,9 @@ public class JobseekerMenu {
         this.jobseeker = jobseeker;
         this.jpm = jpm;
         this.am = am;
+        this.tm = tm;
         this.reportHandler = new ReportHandler(jobseeker, rm, scanner);
-        this.marketplaceHandler = new MarketplaceHandler(jobseeker, pm, scanner);
+        this.marketplaceHandler = new MarketplaceHandler(jobseeker, pm, tm, scanner);
         this.resumeHandler = new ResumeHandler(jobseeker, scanner);
     }
 
@@ -50,6 +54,10 @@ public class JobseekerMenu {
             MenuPrinter.printOption("4", "My Reports");
             MenuPrinter.printOption("5", ">  Do Job (Hired)");
             MenuPrinter.printOption("6", "Update Resume");
+            MenuPrinter.printOption("7", "Deposit Funds");
+            MenuPrinter.printOption("8", "Withdraw Funds");
+            MenuPrinter.printOption("9", "Send Money");
+            MenuPrinter.printOption("10", "View My Transactions");
             MenuPrinter.printOption("0", "<  Logout");
             MenuPrinter.prompt("Enter choice");
 
@@ -60,6 +68,10 @@ public class JobseekerMenu {
                 case "4" -> reportHandler.showMenu();
                 case "5" -> doJob();
                 case "6" -> resumeHandler.showMenu();
+                case "7" -> depositFunds();
+                case "8" -> withdrawFunds();
+                case "9" -> sendMoney();
+                case "10" -> viewMyTransactions();
                 case "0" -> {
                     MenuPrinter.info("Logging out...");
                     return;
@@ -222,6 +234,129 @@ public class JobseekerMenu {
         MenuPrinter.pause();
     }
 
+    /* ====================  FINANCIAL OPERATIONS  ==================== */
+
+    private void depositFunds() {
+        Refresh.refreshTerminal();
+        MenuPrinter.printHeader("DEPOSIT FUNDS");
+        MenuPrinter.breadcrumb("Main Menu > Deposit");
+        
+        System.out.println("Current Balance: $" + String.format("%.2f", jobseeker.getMoney()));
+        MenuPrinter.prompt("Enter amount to deposit");
+        double amount = readDouble();
+        
+        if (amount <= 0) {
+            MenuPrinter.error("Amount must be positive.");
+            MenuPrinter.pause();
+            return;
+        }
+
+        boolean ok = tm.deposit(jobseeker.getId(), amount, "Jobseeker Deposit");
+        if (ok) {
+            MenuPrinter.success("Deposit successful!");
+            MenuPrinter.info("New Balance: $" + String.format("%.2f", jobseeker.getMoney()));
+        } else {
+            MenuPrinter.error("Deposit failed.");
+        }
+        MenuPrinter.pause();
+    }
+
+    private void withdrawFunds() {
+        Refresh.refreshTerminal();
+        MenuPrinter.printHeader("WITHDRAW FUNDS");
+        MenuPrinter.breadcrumb("Main Menu > Withdraw");
+        
+        System.out.println("Current Balance: $" + String.format("%.2f", jobseeker.getMoney()));
+        MenuPrinter.prompt("Enter amount to withdraw");
+        double amount = readDouble();
+        
+        if (amount <= 0) {
+            MenuPrinter.error("Amount must be positive.");
+            MenuPrinter.pause();
+            return;
+        }
+
+        if (jobseeker.getMoney() < amount) {
+            MenuPrinter.error("Insufficient funds.");
+            MenuPrinter.pause();
+            return;
+        }
+
+        boolean ok = tm.withdraw(jobseeker.getId(), amount, "Jobseeker Withdrawal");
+        if (ok) {
+            MenuPrinter.success("Withdrawal successful!");
+            MenuPrinter.info("New Balance: $" + String.format("%.2f", jobseeker.getMoney()));
+        } else {
+            MenuPrinter.error("Withdrawal failed.");
+        }
+        MenuPrinter.pause();
+    }
+
+    private void sendMoney() {
+        Refresh.refreshTerminal();
+        MenuPrinter.printHeader("SEND MONEY");
+        MenuPrinter.breadcrumb("Main Menu > Send Money");
+        
+        MenuPrinter.prompt("Enter recipient User ID");
+        int recipientId = readInt();
+        
+        if (recipientId == jobseeker.getId()) {
+            MenuPrinter.error("Cannot send money to yourself.");
+            MenuPrinter.pause();
+            return;
+        }
+
+        MenuPrinter.prompt("Enter amount to send");
+        double amount = readDouble();
+        
+        if (amount <= 0) {
+            MenuPrinter.error("Amount must be positive.");
+            MenuPrinter.pause();
+            return;
+        }
+
+        if (jobseeker.getMoney() < amount) {
+            MenuPrinter.error("Insufficient funds.");
+            MenuPrinter.pause();
+            return;
+        }
+
+        boolean ok = tm.transfer(jobseeker.getId(), recipientId, amount, "Money Transfer");
+        if (ok) {
+            MenuPrinter.success("Transfer successful!");
+            MenuPrinter.info("New Balance: $" + String.format("%.2f", jobseeker.getMoney()));
+        } else {
+            MenuPrinter.error("Transfer failed.");
+        }
+        MenuPrinter.pause();
+    }
+
+    private void viewMyTransactions() {
+        Refresh.refreshTerminal();
+        MenuPrinter.printHeader("MY TRANSACTIONS");
+        MenuPrinter.breadcrumb("Main Menu > My Transactions");
+
+        List<Transaction> txs = tm.findByUserId(jobseeker.getId());
+        if (txs.isEmpty()) {
+            MenuPrinter.info("No transactions found.");
+            MenuPrinter.pause();
+            return;
+        }
+
+        AsciiTable.print(txs,
+                new String[]{"ID", "Type", "From", "To", "Amount", "Date"},
+                new int[]{6, 10, 16, 16, 10, 18},
+                t -> new String[]{
+                        String.valueOf(t.getTransactionId()),
+                        t.getType(),
+                        t.getFromUsername(),
+                        t.getToUsername(),
+                        String.format("$%.2f", t.getAmount()),
+                        t.getTimestamp()
+                });
+        MenuPrinter.pause();
+    }
+
     /* =========================================================
                            HELPERS
      ========================================================= */
@@ -231,6 +366,16 @@ public class JobseekerMenu {
                 return Integer.parseInt(scanner.nextLine().trim());
             } catch (NumberFormatException ex) {
                 MenuPrinter.error("Please enter a valid number.");
+            }
+        }
+    }
+
+    private double readDouble() {
+        while (true) {
+            try {
+                return Double.parseDouble(scanner.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.print("Please enter a valid number: ");
             }
         }
     }

@@ -3,6 +3,7 @@ package ui.handlers;
 import models.Product;
 import models.Jobseeker;
 import managers.ProductManager;
+import managers.TransactionManager;
 import utils.MenuPrinter;
 import utils.AsciiTable;
 
@@ -12,11 +13,14 @@ import java.util.Scanner;
 public class MarketplaceHandler {
     private final Jobseeker jobseeker;
     private final ProductManager pm;
+    private final TransactionManager tm;
     private final Scanner scanner;
 
-    public MarketplaceHandler(Jobseeker jobseeker, ProductManager pm, Scanner scanner) {
+    public MarketplaceHandler(Jobseeker jobseeker, ProductManager pm, 
+                             TransactionManager tm, Scanner scanner) {
         this.jobseeker = jobseeker;
         this.pm = pm;
+        this.tm = tm;
         this.scanner = scanner;
     }
 
@@ -49,7 +53,6 @@ public class MarketplaceHandler {
             return;
         }
 
-        /* bullet-proof table */
         AsciiTable.print(products,
                 new String[]{"ID", "Product Name", "Price", "Qty", "Status"},
                 new int[]{4, 26, 8, 5, 12},
@@ -94,9 +97,13 @@ public class MarketplaceHandler {
             return;
         }
 
-        /* process purchase */
+        // Process purchase
         jobseeker.setMoney(jobseeker.getMoney() - total);
         pm.update(id, null, null, null, product.getQuantity() - qty, null);
+
+        // Record transaction
+        tm.recordPurchase(jobseeker.getId(), jobseeker.getFullName(), 
+                         id, product.getProductName(), qty, total);
 
         MenuPrinter.success("Purchase completed!");
         MenuPrinter.info("Product : " + product.getProductName());

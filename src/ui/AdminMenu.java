@@ -13,6 +13,7 @@ public class AdminMenu {
     private final UserManager userManager;
     private final JobPostingManager jpm;
     private final ProductManager pm;
+    private final TransactionManager tm;
     private final ReportManager rm;
     private final Scanner scanner = new Scanner(System.in);
 
@@ -22,6 +23,7 @@ public class AdminMenu {
         this.userManager = um;
         this.jpm = jpm;
         this.pm = pm;
+        this.tm = tm;
         this.rm = rm;
     }
 
@@ -486,12 +488,159 @@ public class AdminMenu {
                       4. VIEW ALL TRANSACTIONS
      ========================================================= */
     private void viewAllTransactions() {
+    while (true) {
         Refresh.refreshTerminal();
-        MenuPrinter.printHeader("ALL TRANSACTIONS");
-        MenuPrinter.breadcrumb("Main Menu > View All Transactions");
-        MenuPrinter.info("Feature not fully implemented yet.");
-        MenuPrinter.pause();
+        MenuPrinter.printHeader("TRANSACTIONS");
+        MenuPrinter.breadcrumb("Main Menu > Transactions");
+        MenuPrinter.printOption("1", "View All Transactions");
+        MenuPrinter.printOption("2", "Filter by Type");
+        MenuPrinter.printOption("3", "Filter by User");
+        MenuPrinter.printOption("4", "View Transaction Details");
+        MenuPrinter.printOption("0", "<  Back");
+        MenuPrinter.prompt("Enter choice");
+
+        switch (scanner.nextLine().trim()) {
+            case "1" -> viewAllTransactionsList();
+            case "2" -> filterByType();
+            case "3" -> filterByUser();
+            case "4" -> viewTransactionDetails();
+            case "0" -> { return; }
+            default  -> MenuPrinter.error("Invalid option.");
+        }
     }
+}
+
+private void viewAllTransactionsList() {
+    Refresh.refreshTerminal();
+    MenuPrinter.printHeader("ALL TRANSACTIONS");
+    MenuPrinter.breadcrumb("Main Menu > Transactions > View All");
+
+    List<Transaction> txs = tm.findAll();
+    if (txs.isEmpty()) {
+        MenuPrinter.info("No transactions found.");
+        MenuPrinter.pause();
+        return;
+    }
+
+    AsciiTable.print(txs,
+            new String[]{"ID", "Type", "From", "To", "Amount", "Date"},
+            new int[]{6, 10, 20, 20, 12, 20},
+            t -> new String[]{
+                    String.valueOf(t.getTransactionId()),
+                    t.getType(),
+                    t.getFromUsername(),
+                    t.getToUsername(),
+                    String.format("$%.2f", t.getAmount()),
+                    t.getTimestamp()
+            });
+    MenuPrinter.pause();
+}
+
+private void filterByType() {
+    Refresh.refreshTerminal();
+    MenuPrinter.printHeader("FILTER BY TYPE");
+    MenuPrinter.breadcrumb("Main Menu > Transactions > Filter by Type");
+
+    MenuPrinter.printOption("1", "Deposits");
+    MenuPrinter.printOption("2", "Withdrawals");
+    MenuPrinter.printOption("3", "Transfers");
+    MenuPrinter.printOption("4", "Purchases");
+    MenuPrinter.printOption("5", "Salaries");
+    MenuPrinter.prompt("Select type");
+
+    String type = switch (scanner.nextLine().trim()) {
+        case "1" -> "DEPOSIT";
+        case "2" -> "WITHDRAW";
+        case "3" -> "TRANSFER";
+        case "4" -> "PURCHASE";
+        case "5" -> "SALARY";
+        default -> null;
+    };
+
+    if (type == null) {
+        MenuPrinter.error("Invalid selection.");
+        MenuPrinter.pause();
+        return;
+    }
+
+    List<Transaction> filtered = tm.findByType(type);
+    if (filtered.isEmpty()) {
+        MenuPrinter.info("No " + type + " transactions found.");
+        MenuPrinter.pause();
+        return;
+    }
+
+    AsciiTable.print(filtered,
+            new String[]{"ID", "From", "To", "Amount", "Description", "Date"},
+            new int[]{6, 18, 18, 10, 24, 18},
+            t -> new String[]{
+                    String.valueOf(t.getTransactionId()),
+                    t.getFromUsername(),
+                    t.getToUsername(),
+                    String.format("$%.2f", t.getAmount()),
+                    t.getDescription(),
+                    t.getTimestamp()
+            });
+    MenuPrinter.pause();
+}
+
+private void filterByUser() {
+    Refresh.refreshTerminal();
+    MenuPrinter.printHeader("FILTER BY USER");
+    MenuPrinter.breadcrumb("Main Menu > Transactions > Filter by User");
+
+    MenuPrinter.prompt("Enter User ID");
+    int userId = readInt();
+    
+    User user = userManager.findById(userId);
+    if (user == null) {
+        MenuPrinter.error("User not found.");
+        MenuPrinter.pause();
+        return;
+    }
+
+    List<Transaction> txs = tm.findByUserId(userId);
+    if (txs.isEmpty()) {
+        MenuPrinter.info("No transactions found for " + user.getFullName());
+        MenuPrinter.pause();
+        return;
+    }
+
+    System.out.println("Transactions for: " + user.getFullName() + " (ID: " + userId + ")");
+    System.out.println();
+
+    AsciiTable.print(txs,
+            new String[]{"ID", "Type", "From", "To", "Amount", "Date"},
+            new int[]{6, 10, 18, 18, 10, 18},
+            t -> new String[]{
+                    String.valueOf(t.getTransactionId()),
+                    t.getType(),
+                    t.getFromUsername(),
+                    t.getToUsername(),
+                    String.format("$%.2f", t.getAmount()),
+                    t.getTimestamp()
+            });
+    MenuPrinter.pause();
+}
+
+private void viewTransactionDetails() {
+    Refresh.refreshTerminal();
+    MenuPrinter.printHeader("TRANSACTION DETAILS");
+    MenuPrinter.breadcrumb("Main Menu > Transactions > Details");
+
+    MenuPrinter.prompt("Transaction ID");
+    int id = readInt();
+    
+    Transaction tx = tm.findById(id);
+    if (tx == null) {
+        MenuPrinter.error("Transaction not found.");
+        MenuPrinter.pause();
+        return;
+    }
+
+    System.out.println(tx.displayString());
+    MenuPrinter.pause();
+}
 
     /* =========================================================
                       5. MANAGE REPORTS

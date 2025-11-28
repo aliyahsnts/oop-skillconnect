@@ -1,1 +1,4 @@
-transactionId,userId,username,productId,productName,quantity,totalAmount,timestamp,status
+transactionId,fromUserId,fromUsername,toUserId,toUsername,amount,type,description,timestamp,status
+3001,0,SYSTEM,12,NEW JB,100.00,DEPOSIT,Jobseeker Deposit,2025-11-29 01:26:19,Completed
+3002,12,NEW JB,0,SYSTEM,10.00,WITHDRAW,Jobseeker Withdrawal,2025-11-29 01:27:26,Completed
+3003,12,NEW JB,14,IMYLENE DELFIN,10.00,TRANSFER,Money Transfer,2025-11-29 01:28:24,Completed
