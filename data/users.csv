@@ -1,5 +1,5 @@
 id,fullName,username,password,userType,money
-1,Janel Shian,Shian,123,1,0.0
+1,Super Admin,admin,12345678,3,0.0
 2,Jobseeker,jobseeker,123,1,0.0
 3,Recruit,recruit,abc,2,0.0
 4,Test,admin,123,3,0.0
@@ -12,3 +12,4 @@ id,fullName,username,password,userType,money
 11,JOBSEEKER JB,jobseekerjb,jbjbjbjb,1,0.0
 12,NEW JB,newnewjb,newnewjb,1,0.0
 13,RECRUITER RC,recruiterrc,recruiterrc,2,0.0
+14,IMYLENE DELFIN,aymilene,12345678,2,500.0

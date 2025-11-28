@@ -93,4 +93,52 @@ public class UserManager extends BaseManager<User> {
     public List<User> getAllUsers() {
         return findAll();
     }
+
+    // =========================================
+    //           BALANCE HELPERS
+    // =========================================
+
+    /**
+     * Forward to the BaseManager to find by ID.
+     */
+    public User findById(int id) {
+        return super.findById(id);
+    }
+
+    /**
+     * Returns the current balance (money) for a user.
+     * Returns 0.0 if user not found.
+     */
+    public double getBalance(int userId) {
+        User u = findById(userId);
+        return (u == null) ? 0.0 : u.getMoney();
+    }
+
+    /**
+     * Adjusts the user's balance by 'delta'. 
+     * Returns true on success and persists the change.
+     * Will not allow resulting negative balance.
+     */
+    public boolean adjustBalance(int userId, double delta) {
+        User u = findById(userId);
+        if (u == null) return false;
+        double newBalance = u.getMoney() + delta;
+        if (newBalance < 0) return false; // prevent negative balances
+        u.setMoney(newBalance);
+        persist();
+        return true;
+    }
+
+    /**
+     * Set the user's balance to an absolute value. Returns false if user doesn't exist
+     * or if the requested balance is negative.
+     */
+    public boolean setBalance(int userId, double newBalance) {
+        if (newBalance < 0) return false;
+        User u = findById(userId);
+        if (u == null) return false;
+        u.setMoney(newBalance);
+        persist();
+        return true;
+    }
 }

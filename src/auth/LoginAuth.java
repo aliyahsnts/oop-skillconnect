@@ -3,13 +3,14 @@ package auth;
 import models.*;
 import ui.*;
 import utils.Refresh;
+import utils.MenuPrinter;
 import managers.*;
 
 public class LoginAuth extends Auth {
     @Override
     protected boolean checkUserExists(String username) {
         if (!userManager.usernameExists(username)) {
-            System.out.println("ERROR: Username does not exist. Please create an account first!");
+            MenuPrinter.error("Username does not exist. Please create an account first!");
             return false;
         }
         return true;
@@ -17,47 +18,43 @@ public class LoginAuth extends Auth {
 
     @Override
     protected void handle(String username) {
-        System.out.print("Enter password: ");
+        MenuPrinter.prompt("Enter password");
         String password = sc.nextLine();
 
         User user = userManager.findUser(username);
 
         if (!user.getPassword().equals(password)) {
-            System.out.println("ERROR: Incorrect password.");
+            MenuPrinter.error("Incorrect password.");
             Refresh.refreshTerminal();
             return;
         }
 
-        System.out.println("SUCCESS: Login successful!");
+        MenuPrinter.success("Login successful!");
         Refresh.refreshTerminal();
 
         switch (user.getUserType()) {
         case 1 -> {
             Jobseeker js = (Jobseeker) user;
-            js.loadResumeFromCSV();          // <-- NEW: load résumé into object
+            js.loadResumeFromCSV();
             new JobseekerMenu(js, jobPostingManager, applicationManager,
-            productManager, transactionManager, reportManager).show();
+                              productManager, transactionManager, reportManager).show();
         }
-
         case 2 -> new RecruiterMenu(
-            (Recruiter) user,
-            jobPostingManager,
-            applicationManager,
-            productManager,
-            transactionManager,
-            reportManager,
-            userManager          // <-- NEW
-        ).show();
-
+                    (Recruiter) user,
+                    jobPostingManager,
+                    applicationManager,
+                    productManager,
+                    transactionManager,
+                    reportManager,
+                    userManager).show();
         case 3 -> new AdminMenu(
-            (Admin) user,
-            userManager,
-            jobPostingManager,
-            applicationManager,
-            productManager,
-            transactionManager,
-            reportManager
-        ).show();
+                    (Admin) user,
+                    userManager,
+                    jobPostingManager,
+                    applicationManager,
+                    productManager,
+                    transactionManager,
+                    reportManager).show();
         }
     }
 }

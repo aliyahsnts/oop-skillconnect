@@ -4,17 +4,18 @@ import java.util.List;
 import java.util.Scanner;
 import models.*;
 import managers.*;
-import utils.ApplicationFormGenerator; // Import the new generator
+import utils.MenuPrinter;
+import utils.ApplicationFormGenerator;
+import utils.Refresh;
+import utils.AsciiTable;
 
 public class RecruiterMenu {
     private final Recruiter recruiter;
     private final JobPostingManager jpm;
     private final ApplicationManager am;
-    private final UserManager um;   
     private final Scanner scanner = new Scanner(System.in);
-    private final ApplicationFormGenerator formGenerator = new ApplicationFormGenerator(); // Instance of the generator
+    private final ApplicationFormGenerator formGen = new ApplicationFormGenerator();
 
-    // NEW constructor signature – added UserManager
     public RecruiterMenu(Recruiter recruiter,
                          JobPostingManager jpm,
                          ApplicationManager am,
@@ -25,285 +26,274 @@ public class RecruiterMenu {
         this.recruiter = recruiter;
         this.jpm = jpm;
         this.am = am;
-        this.um = um;               
     }
 
+    /* =========================================================
+                           MAIN LOOP
+     ========================================================= */
     public void show() {
         while (true) {
-            System.out.println("\n=== RECRUITER MENU ===");
-            System.out.println("Welcome, " + recruiter.getFullName() + "!");
-            System.out.println("[1] Create Job Posting");
-            System.out.println("[2] View All Job Postings");
-            System.out.println("[3] Update Job Posting");
-            System.out.println("[4] Delete Job Posting");
-            System.out.println("[5] View Applicants for a Job"); // NEW OPTION
-            System.out.println("[0] Logout");
-            System.out.print("Enter your choice: ");
+            Refresh.refreshTerminal();          // ← clean screen
+            MenuPrinter.printHeader("RECRUITER MENU");
+            MenuPrinter.breadcrumb("Main Menu");
+            System.out.println(" Recruiter: " + recruiter.getFullName());
+            System.out.println();
+            MenuPrinter.printOption("1", "Create Job Posting");
+            MenuPrinter.printOption("2", "View My Job Postings");
+            MenuPrinter.printOption("3", "Update Job Posting");
+            MenuPrinter.printOption("4", "Delete Job Posting");
+            MenuPrinter.printOption("5", "View Applicants for a Job");
+            MenuPrinter.printOption("0", "<  Logout");
+            MenuPrinter.prompt("Enter choice");
 
             switch (scanner.nextLine().trim()) {
                 case "1" -> createJobPosting();
-                case "2" -> viewAllJobs();
+                case "2" -> viewMyJobs();
                 case "3" -> updateJobPosting();
-                case "4" -> deleteJob();
-                case "5" -> viewApplicantsByJob(); // NEW HANDLER
+                case "4" -> deleteJobPosting();
+                case "5" -> viewApplicantsByJob();
                 case "0" -> {
-                    System.out.println("Logging out...");
+                    MenuPrinter.info("Logging out...");
                     return;
                 }
-                default -> System.out.println("Invalid choice. Please try again.");
+                default -> MenuPrinter.error("Invalid choice – try again.");
             }
         }
     }
 
+    /* =========================================================
+                           1. CREATE
+     ========================================================= */
     private void createJobPosting() {
-        System.out.println("\n--- Create New Job Posting ---");
-        System.out.print("Job Name: ");
-        String jobName = scanner.nextLine();
-        System.out.print("Description: ");
-        String description = scanner.nextLine();
-        System.out.print("Hours Needed: ");
-        String hoursNeeded = scanner.nextLine();
-        System.out.print("Payment (₱): ");
+        Refresh.refreshTerminal();          // ← clean screen
+        MenuPrinter.printHeader("CREATE JOB POSTING");
+        MenuPrinter.prompt("Job Name");
+        String jobName = scanner.nextLine().trim();
+        MenuPrinter.prompt("Description");
+        String description = scanner.nextLine().trim();
+        MenuPrinter.prompt("Hours Needed");
+        String hoursNeeded = scanner.nextLine().trim();
+        MenuPrinter.prompt("Payment ($)");
         double payment = readDouble();
-        
-        // NEW: Generate Application Form Questions
-        List<String> questions = formGenerator.generateForm(); 
 
-        JobPosting job = jpm.create(jobName, description, hoursNeeded, payment, recruiter.getFullName(), questions);
-        System.out.println("SUCCESS: Job Posting created with ID: " + job.getJobId());
-        System.out.println(job.displayString());
+        List<String> questions = formGen.generateForm();
+        JobPosting job = jpm.create(jobName, description, hoursNeeded, payment,
+                                    recruiter.getFullName(), questions);
+
+        MenuPrinter.success("Job created! ID = " + job.getJobId());
+        MenuPrinter.pause();
     }
 
-    // ... (viewAllJobs, updateJobPosting, deleteJob methods remain similar)
+    /* =========================================================
+                           2. VIEW MY JOBS
+     ========================================================= */
+    private void viewMyJobs() {
+        Refresh.refreshTerminal();          // ← clean screen
+        MenuPrinter.printHeader("MY JOB POSTINGS");
+        MenuPrinter.breadcrumb("Main Menu > My Job Postings");
 
-    private void viewAllJobs() {
-        System.out.println("\n--- Your Job Postings ---");
         List<JobPosting> jobs = jpm.findByRecruiterName(recruiter.getFullName());
         if (jobs.isEmpty()) {
-            System.out.println("No job postings found.");
+            MenuPrinter.info("You have not posted any jobs yet.");
+            MenuPrinter.pause();
             return;
         }
-        for (JobPosting job : jobs) {
-            System.out.println(job.displayString());
-            System.out.println("-------------------------------------");
-        }
-    }
-        private void updateJob() {
-        System.out.print("Enter Job Number to update: ");
-        int jobNum = readInt();
-        JobPosting job = jpm.findById(jobNum);
-        if (job == null) {
-            System.out.println("ERROR: Job not found.");
-            return;
-        }
-        System.out.println("Current job info:\n" + job.displayString());
 
-        System.out.print("Enter new job name (blank to keep): ");
+        AsciiTable.print(jobs,
+                new String[]{"ID", "Job Name", "Payment", "Status"},
+                new int[]{4, 26, 10, 12},
+                j -> new String[]{
+                        String.valueOf(j.getJobId()),
+                        j.getJobName(),
+                        String.format("$%.2f", j.getPayment()),
+                        j.getStatus()
+                });
+        MenuPrinter.pause();
+    }
+
+    /* =========================================================
+                           3. UPDATE
+     ========================================================= */
+    private void updateJobPosting() {
+        Refresh.refreshTerminal();          // ← clean screen
+        MenuPrinter.printHeader("UPDATE JOB POSTING");
+        MenuPrinter.prompt("Job ID to update");
+        int jobId = readInt();
+        JobPosting job = jpm.findById(jobId);
+        if (job == null || !job.getRecruiterName().equals(recruiter.getFullName())) {
+            MenuPrinter.error("Job not found or not yours.");
+            MenuPrinter.pause();
+            return;
+        }
+
+        System.out.println("Leave blank to keep current value.");
+        MenuPrinter.prompt("New name (" + job.getJobName() + ")");
         String name = scanner.nextLine().trim();
-        System.out.print("Enter new description (blank to keep): ");
+        MenuPrinter.prompt("New description (" + job.getDescription() + ")");
         String desc = scanner.nextLine().trim();
-        System.out.print("Enter new hours (blank to keep): ");
+        MenuPrinter.prompt("New hours (" + job.getHoursNeeded() + ")");
         String hours = scanner.nextLine().trim();
-        System.out.print("Enter new payment (blank to keep): ");
+        MenuPrinter.prompt("New payment (" + job.getPayment() + ")");
         String payStr = scanner.nextLine().trim();
-        System.out.print("Enter new status (Available/Closed) (blank to keep): ");
+        Double payment = payStr.isEmpty() ? null : Double.valueOf(payStr);
+        MenuPrinter.prompt("New status (Available/Closed) (" + job.getStatus() + ")");
         String status = scanner.nextLine().trim();
 
-        Double payment = null;
-        if (!payStr.isEmpty()) {
-            try {
-                payment = Double.valueOf(payStr);
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid payment. Update cancelled.");
-                return;
-            }
-        }
+        List<String> questions = null;
+        MenuPrinter.prompt("Update application questions too? (y/n)");
+        if (scanner.nextLine().trim().equalsIgnoreCase("y"))
+            questions = formGen.generateForm();
 
-        boolean ok = jpm.update(jobNum,
+        boolean ok = jpm.update(jobId,
                 name.isEmpty() ? null : name,
                 desc.isEmpty() ? null : desc,
                 hours.isEmpty() ? null : hours,
                 payment,
-            status.isEmpty() ? null : status,
-            null);
-        System.out.println(ok ? "SUCCESS: Job updated!" : "ERROR: Could not update job.");
+                status.isEmpty() ? null : status,
+                questions);
+
+        if (ok) MenuPrinter.success("Job updated!");
+        else    MenuPrinter.error("Update failed.");
+        MenuPrinter.pause();
     }
 
-    private void deleteJob() {
-        System.out.print("Enter Job Number to delete: ");
-        int jobNum = readInt();
-        JobPosting job = jpm.findById(jobNum);
-        if (job == null) {
-            System.out.println("ERROR: Job not found.");
+    /* =========================================================
+                           4. DELETE
+     ========================================================= */
+    private void deleteJobPosting() {
+        Refresh.refreshTerminal();          // ← clean screen
+        MenuPrinter.printHeader("DELETE JOB POSTING");
+        MenuPrinter.prompt("Job ID to delete");
+        int jobId = readInt();
+        JobPosting job = jpm.findById(jobId);
+        if (job == null || !job.getRecruiterName().equals(recruiter.getFullName())) {
+            MenuPrinter.error("Job not found or not yours.");
+            MenuPrinter.pause();
             return;
         }
-        System.out.println("Job info:\n" + job.displayString());
-        System.out.print("Are you sure you want to delete this job? (Y/N): ");
-        if (scanner.nextLine().trim().equalsIgnoreCase("Y")) {
-            boolean removed = jpm.delete(jobNum);
-            System.out.println(removed ? "SUCCESS: Job removed!" : "ERROR: Could not remove job.");
+
+        System.out.println("Job: " + job.getJobName() + " ($" + job.getPayment() + ")");
+        MenuPrinter.prompt("Are you sure? (y/n)");
+        if (scanner.nextLine().trim().equalsIgnoreCase("y")) {
+            boolean removed = jpm.delete(jobId);
+            if (removed) MenuPrinter.success("Job deleted!");
+            else         MenuPrinter.error("Could not delete job.");
         } else {
-            System.out.println("Deletion cancelled.");
+            MenuPrinter.info("Deletion cancelled.");
         }
+        MenuPrinter.pause();
     }
 
-    private void updateJobPosting() {
-        System.out.print("Enter Job ID to update: ");
-        int jobId = readInt();
-        JobPosting job = jpm.findById(jobId);
-        if (job == null) {
-            System.out.println("ERROR: Job not found.");
-            return;
-        }
-
-        if (!job.getRecruiterName().equals(recruiter.getFullName())) {
-            System.out.println("ERROR: You can only update your own job postings.");
-            return;
-        }
-
-        System.out.println("Updating Job: " + job.getJobName());
-        System.out.println("Enter new value or leave blank to keep current value.");
-
-        System.out.print("Job Name [" + job.getJobName() + "]: ");
-        String jobName = scanner.nextLine().trim();
-
-        System.out.print("Description [" + job.getDescription() + "]: ");
-        String description = scanner.nextLine().trim();
-
-        System.out.print("Hours Needed [" + job.getHoursNeeded() + "]: ");
-        String hoursNeeded = scanner.nextLine().trim();
-
-        System.out.print("Payment [" + job.getPayment() + "]: ");
-        String paymentStr = scanner.nextLine().trim();
-        Double payment = paymentStr.isEmpty() ? null : readDouble(paymentStr);
-
-        System.out.print("Status [" + job.getStatus() + "]: ");
-        String status = scanner.nextLine().trim();
-        
-        // Option to update questions
-        List<String> questions = null;
-        System.out.print("Do you want to update the Application Form questions? (Y/N, current " + job.getApplicationQuestions().size() + "): ");
-        if (scanner.nextLine().trim().equalsIgnoreCase("Y")) {
-             questions = formGenerator.generateForm(); 
-        }
-
-        boolean ok = jpm.update(
-            jobId, 
-            jobName.isEmpty() ? null : jobName, 
-            description.isEmpty() ? null : description, 
-            hoursNeeded.isEmpty() ? null : hoursNeeded,
-            payment, 
-            status.isEmpty() ? null : status,
-            questions // Pass null or the new list
-        );
-        System.out.println(ok ? "SUCCESS: Job updated!" : "ERROR: Could not update job.");
-    }
-    
-    // NEW METHOD: View Applicants for a Specific Job
+    /* =========================================================
+           5. VIEW APPLICANTS
+     ========================================================= */
     private void viewApplicantsByJob() {
-        System.out.print("Enter Job ID to view applicants for: ");
+        Refresh.refreshTerminal();          // ← clean screen
+        MenuPrinter.printHeader("APPLICANTS FOR JOB");
+        MenuPrinter.prompt("Job ID to view applicants");
         int jobId = readInt();
-        
         JobPosting job = jpm.findById(jobId);
-        if (job == null) {
-            System.out.println("ERROR: Job not found.");
+        if (job == null || !job.getRecruiterName().equals(recruiter.getFullName())) {
+            MenuPrinter.error("Job not found or not yours.");
+            MenuPrinter.pause();
             return;
         }
 
-        if (!job.getRecruiterName().equals(recruiter.getFullName())) {
-            System.out.println("ERROR: You can only view applicants for your own job postings.");
+        List<Application> apps = am.findByJobId(jobId);
+        if (apps.isEmpty()) {
+            MenuPrinter.info("No applicants yet for this job.");
+            MenuPrinter.pause();
             return;
         }
-        
-        System.out.println("\n--- Applicants for Job ID " + jobId + ": " + job.getJobName() + " ---");
-        List<Application> applicants = am.findByJobId(jobId);
-        
-        if (applicants.isEmpty()) {
-            System.out.println("No applicants for this job yet.");
-            return;
-        }
-        
-        for (Application app : applicants) {
-            // Retrieve job posting again to get the current questions for display
-            JobPosting currentJob = jpm.findById(app.getJobId()); 
-            List<String> questions = currentJob != null ? currentJob.getApplicationQuestions() : List.of();
 
-            System.out.println(app.displayString(questions)); // Display with context
-            System.out.println("Status: " + app.getStatus());
-            System.out.println("-------------------------------------");
-        }
-        
-        // Offer a menu for actions (e.g., Hire/Decline)
+        AsciiTable.print(apps,
+                new String[]{"ID", "Applicant Name", "Status"},
+                new int[]{4, 24, 12},
+                a -> new String[]{
+                        String.valueOf(a.getApplicationId()),
+                        a.getApplicantName(),
+                        a.getStatus()
+                });
+
         processApplicants(jobId);
     }
 
+    /* ---------------------------------------------------------
+       applicant sub-menu
+     --------------------------------------------------------- */
     private void processApplicants(int jobId) {
-        while(true) {
-            System.out.println("\n[1] Change Application Status (Hire/Decline)");
-            System.out.println("[2] View Applicant Resume (WIP: File system viewing)");
-            System.out.println("[0] Back to Recruiter Menu");
-            System.out.print("Enter choice: ");
-            
+        while (true) {
+            Refresh.refreshTerminal();          // ← clean screen
+            MenuPrinter.printHeader("APPLICANT ACTIONS");
+            MenuPrinter.breadcrumb("Main Menu > Applicants for Job " + jobId);
+            MenuPrinter.printOption("1", "Change Application Status (Hire/Decline)");
+            MenuPrinter.printOption("2", "View Full Application Details");
+            MenuPrinter.printOption("0", "<  Back");
+            MenuPrinter.prompt("Enter choice");
+
             switch (scanner.nextLine().trim()) {
                 case "1" -> changeApplicationStatus(jobId);
-                case "2" -> System.out.println("Feature not fully implemented. Resume path saved in application data.");
+                case "2" -> viewFullApplicationDetails(jobId);
                 case "0" -> { return; }
-                default -> System.out.println("Invalid choice. Please try again.");
+                default  -> MenuPrinter.error("Invalid choice.");
             }
         }
     }
 
     private void changeApplicationStatus(int jobId) {
-        System.out.print("Enter Application ID to process: ");
+        MenuPrinter.prompt("Application ID to process");
         int appId = readInt();
         Application app = am.findByApplicationId(appId);
-
         if (app == null || app.getJobId() != jobId) {
-            System.out.println("ERROR: Application not found or does not belong to this job.");
+            MenuPrinter.error("Application not found or does not belong to this job.");
             return;
         }
-
-        System.out.print("New Status (Hired/Declined/Pending): ");
+        MenuPrinter.prompt("New Status (Hired/Declined/Pending)");
         String newStatus = scanner.nextLine().trim();
-
-        if (newStatus.equalsIgnoreCase("Hired") || 
-            newStatus.equalsIgnoreCase("Declined") ||
-            newStatus.equalsIgnoreCase("Pending")) {
-            
-            boolean ok = am.updateStatus(appId, newStatus);
-            System.out.println(ok ? "SUCCESS: Application status updated to " + newStatus + "." : "ERROR: Failed to update status.");
-        } else {
-            System.out.println("ERROR: Invalid status. Must be Hired, Declined, or Pending.");
+        if (!newStatus.equalsIgnoreCase("Hired") &&
+            !newStatus.equalsIgnoreCase("Declined") &&
+            !newStatus.equalsIgnoreCase("Pending")) {
+            MenuPrinter.error("Status must be Hired, Declined or Pending.");
+            return;
         }
+        boolean ok = am.updateStatus(appId, newStatus);
+        if (ok) MenuPrinter.success("Status updated to " + newStatus);
+        else    MenuPrinter.error("Could not update status.");
     }
 
+    private void viewFullApplicationDetails(int jobId) {
+        Refresh.refreshTerminal();          // ← clean screen
+        MenuPrinter.printHeader("APPLICATION DETAILS");
+        MenuPrinter.prompt("Application ID to view");
+        int appId = readInt();
+        Application app = am.findByApplicationId(appId);
+        if (app == null || app.getJobId() != jobId) {
+            MenuPrinter.error("Application not found or does not belong to this job.");
+            return;
+        }
+        JobPosting job = jpm.findById(jobId);
+        System.out.println(app.displayString(job != null ? job.getApplicationQuestions() : List.of()));
+        MenuPrinter.pause();
+    }
+
+    /* =========================================================
+                           HELPERS
+     ========================================================= */
     private int readInt() {
         while (true) {
             try {
                 return Integer.parseInt(scanner.nextLine().trim());
-            } catch (NumberFormatException e) {
-                System.out.print("Please enter a valid integer: ");
+            } catch (NumberFormatException ex) {
+                MenuPrinter.error("Please enter a valid integer.");
             }
         }
     }
-    
-    // Helper method to parse double when input is guaranteed to be a number string
-    private Double readDouble(String s) {
-        try {
-            return Double.parseDouble(s);
-        } catch (NumberFormatException e) {
-            // Should not happen if called correctly in updateJobPosting, but robust
-            System.out.print("Invalid number format. Using 0.0: ");
-            return 0.0;
-        }
-    }
-    
     private double readDouble() {
         while (true) {
             try {
                 return Double.parseDouble(scanner.nextLine().trim());
-            } catch (NumberFormatException e) {
-                System.out.print("Please enter a valid number for payment: ");
+            } catch (NumberFormatException ex) {
+                MenuPrinter.error("Please enter a valid number.");
             }
         }
     }

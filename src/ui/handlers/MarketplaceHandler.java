@@ -3,6 +3,9 @@ package ui.handlers;
 import models.Product;
 import models.Jobseeker;
 import managers.ProductManager;
+import utils.MenuPrinter;
+import utils.AsciiTable;
+
 import java.util.List;
 import java.util.Scanner;
 
@@ -19,88 +22,96 @@ public class MarketplaceHandler {
 
     public void showMenu() {
         while (true) {
-            System.out.println("\n===== MARKETPLACE =====");
-            System.out.println("Wallet Balance: ₱" + jobseeker.getMoney());
-            System.out.println("1. View All Products");
-            System.out.println("2. Purchase Product");
-            System.out.println("0. Back");
-            System.out.print("Enter your choice: ");
-            
+            MenuPrinter.printHeader("MARKETPLACE");
+            System.out.printf("  Wallet Balance: $%.2f%n%n", jobseeker.getMoney());
+            MenuPrinter.printOption("1", "View All Products");
+            MenuPrinter.printOption("2", "Purchase Product");
+            MenuPrinter.printOption("0", "Back");
+            MenuPrinter.prompt("Enter choice");
+
             switch (readInt()) {
                 case 1 -> viewAllProducts();
                 case 2 -> purchaseProduct();
                 case 0 -> { return; }
-                default -> System.out.println("ERROR: Invalid selection.");
+                default -> MenuPrinter.error("Invalid selection.");
             }
         }
     }
 
     private void viewAllProducts() {
         List<Product> products = pm.findAll().stream()
-            .filter(p -> p.getStatus().equalsIgnoreCase("Available"))
-            .toList();
-            
+                                   .filter(p -> p.getStatus().equalsIgnoreCase("Available"))
+                                   .toList();
+
         if (products.isEmpty()) {
-            System.out.println("No products available.");
+            MenuPrinter.info("No products available.");
+            MenuPrinter.pause();
             return;
         }
-        
-        System.out.println("\n--- Available Products ---");
-        for (Product p : products) {
-            System.out.println(p.displayString());
-            System.out.println("-------------------------------------");
-        }
+
+        /* bullet-proof table */
+        AsciiTable.print(products,
+                new String[]{"ID", "Product Name", "Price", "Qty", "Status"},
+                new int[]{4, 26, 8, 5, 12},
+                p -> new String[]{
+                        String.valueOf(p.getProductId()),
+                        p.getProductName(),
+                        String.format("$%.2f", p.getPrice()),
+                        String.valueOf(p.getQuantity()),
+                        p.getStatus()
+                });
+        MenuPrinter.pause();
     }
 
     private void purchaseProduct() {
         viewAllProducts();
-        
-        System.out.print("\nEnter Product ID (or 0 to cancel): ");
+
+        MenuPrinter.prompt("Enter Product ID (or 0 to cancel)");
         int id = readInt();
         if (id == 0) return;
-        
+
         Product product = pm.findById(id);
         if (product == null || !product.getStatus().equalsIgnoreCase("Available")) {
-            System.out.println("ERROR: Product not found or not available.");
+            MenuPrinter.error("Product not found or not available.");
             return;
         }
-        
-        System.out.print("Enter quantity: ");
+
+        MenuPrinter.prompt("Enter quantity");
         int qty = readInt();
-        
+
         if (qty <= 0) {
-            System.out.println("ERROR: Invalid quantity.");
+            MenuPrinter.error("Invalid quantity.");
             return;
         }
-        
         if (qty > product.getQuantity()) {
-            System.out.println("ERROR: Not enough stock. Available: " + product.getQuantity());
+            MenuPrinter.error("Not enough stock. Available: " + product.getQuantity());
             return;
         }
-        
+
         double total = product.getPrice() * qty;
         if (jobseeker.getMoney() < total) {
-            System.out.println("ERROR: Insufficient funds. Total cost: ₱" + total);
+            MenuPrinter.error("Insufficient funds. Total cost: $" + total);
             return;
         }
-        
-        // Process purchase
+
+        /* process purchase */
         jobseeker.setMoney(jobseeker.getMoney() - total);
         pm.update(id, null, null, null, product.getQuantity() - qty, null);
-        
-        System.out.println("\nSUCCESS: Purchase completed!");
-        System.out.println("Product: " + product.getProductName());
-        System.out.println("Quantity: " + qty);
-        System.out.println("Total Cost: ₱" + total);
-        System.out.println("New Balance: ₱" + jobseeker.getMoney());
+
+        MenuPrinter.success("Purchase completed!");
+        MenuPrinter.info("Product : " + product.getProductName());
+        MenuPrinter.info("Quantity: " + qty);
+        MenuPrinter.info("Total   : $" + total);
+        MenuPrinter.info("Balance : $" + jobseeker.getMoney());
+        MenuPrinter.pause();
     }
 
     private int readInt() {
         while (true) {
             try {
-                return Integer.parseInt(scanner.nextLine());
+                return Integer.parseInt(scanner.nextLine().trim());
             } catch (NumberFormatException e) {
-                System.out.print("Invalid input. Please enter a number: ");
+                MenuPrinter.error("Please enter a valid number.");
             }
         }
     }

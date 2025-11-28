@@ -3,41 +3,47 @@ package ui;
 import java.util.List;
 import java.util.Scanner;
 import models.*;
-import utils.Refresh;
 import managers.*;
+import utils.MenuPrinter;
+import utils.Refresh;
+import utils.AsciiTable;
 
 public class AdminMenu {
-    private Admin admin;
-    private UserManager userManager;
-    private JobPostingManager jpm;
-    private ProductManager pm;
-    private ReportManager rm;
-    private Scanner scanner = new Scanner(System.in);
+    private final Admin admin;
+    private final UserManager userManager;
+    private final JobPostingManager jpm;
+    private final ProductManager pm;
+    private final ReportManager rm;
+    private final Scanner scanner = new Scanner(System.in);
 
-    // Constructor
     public AdminMenu(Admin admin, UserManager um, JobPostingManager jpm, ApplicationManager am,
-                    ProductManager pm, TransactionManager tm, ReportManager rm) {
+                     ProductManager pm, TransactionManager tm, ReportManager rm) {
         this.admin = admin;
         this.userManager = um;
         this.jpm = jpm;
         this.pm = pm;
         this.rm = rm;
     }
-    // show - display menu
+
+    /* =========================================================
+                           MAIN LOOP
+     ========================================================= */
     public void show() {
         while (true) {
-            System.out.println("\n=== ADMIN MENU ===");
-            System.out.println("Welcome, Admin " + admin.getFullName() + "!");
-            System.out.println("1. Manage Users");
-            System.out.println("2. Manage Jobs");
-            System.out.println("3. Manage Marketplace");
-            System.out.println("4. View All Transactions");
-            System.out.println("5. Manage Reports");
-            System.out.println("0. Logout");
-            System.out.print("Enter choice: ");
+            Refresh.refreshTerminal();
+            MenuPrinter.printHeader("ADMIN MENU");
+            MenuPrinter.breadcrumb("Main Menu");
+            System.out.println(" Admin: " + admin.getFullName());
+            System.out.println();
+            MenuPrinter.printOption("1", "Manage Users");
+            MenuPrinter.printOption("2", "Manage Jobs");
+            MenuPrinter.printOption("3", "Manage Marketplace");
+            MenuPrinter.printOption("4", "View All Transactions");
+            MenuPrinter.printOption("5", "Manage Reports");
+            MenuPrinter.printOption("0", "<  Logout");
+            MenuPrinter.prompt("Enter choice");
 
-            String choice = scanner.nextLine().trim();
-            switch (choice) {
+            switch (scanner.nextLine().trim()) {
                 case "1" -> manageUsers();
                 case "2" -> manageJobs();
                 case "3" -> manageMarketplace();
@@ -46,557 +52,599 @@ public class AdminMenu {
                 case "0" -> {
                     if (confirmLogout()) return;
                 }
-                default -> System.out.println("Invalid option. Please try again.");
+                default -> MenuPrinter.error("Invalid choice – try again.");
             }
         }
     }
 
-    // ========================================================================
-    //   USER FUNCTIONS
-    // ========================================================================
-
-    //manage users - manage users menu
+    /* =========================================================
+                           1. MANAGE USERS
+     ========================================================= */
     private void manageUsers() {
-        System.out.println("\n=== Manage Users ===");
-        System.out.println("1. View All Users");
-        System.out.println("2. Create Account");
-        System.out.println("3. Update Account");
-        System.out.println("4. Delete Account");
-        System.out.println("0. Back");
-        System.out.print("Enter choice: ");
-        
-        String choice = scanner.nextLine().trim();
-        switch (choice) {
-            case "1" -> viewAllAccounts();
-            case "2" -> createAccount();
-            case "3" -> updateAccount();
-            case "4" -> deleteAccount();
-            case "0" -> { return; }
-            default -> System.out.println("Invalid option.");
+        while (true) {
+            Refresh.refreshTerminal();
+            MenuPrinter.printHeader("MANAGE USERS");
+            MenuPrinter.breadcrumb("Main Menu > Manage Users");
+            MenuPrinter.printOption("1", "View All Users");
+            MenuPrinter.printOption("2", "Create Account");
+            MenuPrinter.printOption("3", "Update Account");
+            MenuPrinter.printOption("4", "Delete Account");
+            MenuPrinter.printOption("0", "<  Back");
+            MenuPrinter.prompt("Enter choice");
+
+            switch (scanner.nextLine().trim()) {
+                case "1" -> viewAllAccounts();
+                case "2" -> createAccount();
+                case "3" -> updateAccount();
+                case "4" -> deleteAccount();
+                case "0" -> { return; }
+                default  -> MenuPrinter.error("Invalid option.");
+            }
         }
     }
 
-    //view all accounts - view all users
+    /* --------------------------------------------------------- */
     private void viewAllAccounts() {
+        Refresh.refreshTerminal();
+        MenuPrinter.printHeader("ALL USERS");
+        MenuPrinter.breadcrumb("Main Menu > Manage Users > View All Users");
+
         List<User> users = userManager.getAllUsers();
         if (users.isEmpty()) {
-            System.out.println("No users found.");
+            MenuPrinter.info("No users found.");
+            MenuPrinter.pause();
             return;
         }
-        
-        System.out.println("\n=== All Users ===");
-        for (User u : users) {
-            String userTypeStr = switch (u.getUserType()) {
-                case 1 -> "Jobseeker";
-                case 2 -> "Recruiter";
-                case 3 -> "Admin";
-                default -> "Unknown";
-            };
-            System.out.println("----------------------------");
-            System.out.println("ID: " + u.getId());
-            System.out.println("Name: " + u.getFullName());
-            System.out.println("Username: " + u.getUsername());
-            System.out.println("Type: " + userTypeStr);
-            System.out.println("Money: $" + u.getMoney());
-        }
-        System.out.println("----------------------------");
+
+        AsciiTable.print(users,
+                new String[]{"ID", "Name", "Username", "Type", "Money"},
+                new int[]{4, 20, 15, 10, 10},
+                u -> new String[]{
+                        String.valueOf(u.getId()),
+                        u.getFullName(),
+                        u.getUsername(),
+                        typeToString(u.getUserType()),
+                        String.format("$%.2f", u.getMoney())
+                });
+        MenuPrinter.pause();
     }
 
-    // create account
-    private void createAccount() {
-        System.out.print("Enter full name: ");
-        String fullName = scanner.nextLine().trim();
-        
-        System.out.print("Enter username: ");
-        String username = scanner.nextLine().trim();
+    private String typeToString(int type) {
+        return switch (type) {
+            case 1 -> "Jobseeker";
+            case 2 -> "Recruiter";
+            case 3 -> "Admin";
+            default -> "Unknown";
+        };
+    }
 
+    /* --------------------------------------------------------- */
+    private void createAccount() {
+        Refresh.refreshTerminal();
+        MenuPrinter.printHeader("CREATE ACCOUNT");
+        MenuPrinter.breadcrumb("Main Menu > Manage Users > Create Account");
+
+        MenuPrinter.prompt("Full name");
+        String fullName = scanner.nextLine().trim();
+        MenuPrinter.prompt("Username");
+        String username = scanner.nextLine().trim();
         if (userManager.usernameExists(username)) {
-            System.out.println("ERROR: Username already exists!");
+            MenuPrinter.error("Username already exists!");
+            MenuPrinter.pause();
             return;
         }
-
-        System.out.print("Enter password: ");
+        MenuPrinter.prompt("Password");
         String password = scanner.nextLine().trim();
-        
-        System.out.print("Enter user type (1=Jobseeker, 2=Recruiter, 3=Admin): ");
+        MenuPrinter.prompt("User type (1=Jobseeker, 2=Recruiter, 3=Admin)");
         int type = readInt();
-
         if (type < 1 || type > 3) {
-            System.out.println("ERROR: Invalid user type.");
+            MenuPrinter.error("Invalid user type.");
+            MenuPrinter.pause();
             return;
         }
 
         int newId = userManager.nextId();
-        User newUser;
-        
-        switch (type) {
-            case 1 -> newUser = new Jobseeker(newId, fullName, username, password, 0.0);
-            case 2 -> newUser = new Recruiter(newId, fullName, username, password, 0.0);
-            case 3 -> newUser = new Admin(newId, fullName, username, password, 0.0);
-            default -> {
-                System.out.println("ERROR: Invalid user type.");
-                return;
-            }
-        }
-        
+        User newUser = switch (type) {
+            case 1 -> new Jobseeker(newId, fullName, username, password, 0.0);
+            case 2 -> new Recruiter(newId, fullName, username, password, 0.0);
+            case 3 -> new Admin(newId, fullName, username, password, 0.0);
+            default -> null;
+        };
         userManager.addUser(newUser);
-        System.out.println("SUCCESS: Account created! ID=" + newUser.getId());
+        MenuPrinter.success("Account created! ID=" + newUser.getId());
+        MenuPrinter.pause();
     }
 
-    //update account
+    /* --------------------------------------------------------- */
     private void updateAccount() {
-        System.out.print("Enter username to update: ");
+        Refresh.refreshTerminal();
+        MenuPrinter.printHeader("UPDATE ACCOUNT");
+        MenuPrinter.breadcrumb("Main Menu > Manage Users > Update Account");
+
+        MenuPrinter.prompt("Username to update");
         String username = scanner.nextLine().trim();
         User user = userManager.findUser(username);
-        
         if (user == null) {
-            System.out.println("ERROR: User not found.");
+            MenuPrinter.error("User not found.");
+            MenuPrinter.pause();
             return;
         }
 
-        System.out.println("Current user info:");
+        System.out.println("Current info:");
         System.out.println("Name: " + user.getFullName());
         System.out.println("Username: " + user.getUsername());
 
-        System.out.print("Enter new full name (leave blank to keep current): ");
+        MenuPrinter.prompt("New full name (blank to keep)");
         String fullName = scanner.nextLine().trim();
-        
-        System.out.print("Enter new password (leave blank to keep current): ");
+        MenuPrinter.prompt("New password (blank to keep)");
         String password = scanner.nextLine().trim();
 
         if (!fullName.isEmpty()) user.setFullName(fullName);
         if (!password.isEmpty()) user.setPassword(password);
-
         userManager.saveUsers();
-        System.out.println("SUCCESS: Account updated!");
+        MenuPrinter.success("Account updated!");
+        MenuPrinter.pause();
     }
 
-    //delete account
+    /* --------------------------------------------------------- */
     private void deleteAccount() {
-        System.out.print("Enter username to delete: ");
+        Refresh.refreshTerminal();
+        MenuPrinter.printHeader("DELETE ACCOUNT");
+        MenuPrinter.breadcrumb("Main Menu > Manage Users > Delete Account");
+
+        MenuPrinter.prompt("Username to delete");
         String username = scanner.nextLine().trim();
         User user = userManager.findUser(username);
-        
         if (user == null) {
-            System.out.println("ERROR: User not found.");
+            MenuPrinter.error("User not found.");
+            MenuPrinter.pause();
             return;
         }
 
         System.out.println("User info:");
         System.out.println("Name: " + user.getFullName());
         System.out.println("Username: " + user.getUsername());
-        
-        System.out.print("Are you sure you want to delete this account? (Y/N): ");
-        String conf = scanner.nextLine().trim();
-        
-        if (conf.equalsIgnoreCase("Y")) {
+
+        MenuPrinter.prompt("Are you sure? (y/n)");
+        if (scanner.nextLine().trim().equalsIgnoreCase("y")) {
             boolean removed = userManager.deleteUser(username);
-            if (removed) {
-                System.out.println("SUCCESS: Account deleted!");
-            } else {
-                System.out.println("ERROR: Could not delete account.");
-            }
+            if (removed) MenuPrinter.success("Account deleted!");
+            else         MenuPrinter.error("Could not delete account.");
         } else {
-            System.out.println("Deletion cancelled.");
+            MenuPrinter.info("Deletion cancelled.");
         }
+        MenuPrinter.pause();
     }
 
-    // ========================================================================
-    //   JOBS FUNCTIONS
-    // ========================================================================
+    /* =========================================================
+                           2. MANAGE JOBS
+     ========================================================= */
     private void manageJobs() {
-        System.out.println("\n=== Manage Jobs ===");
-        System.out.println("1. View All Jobs");
-        System.out.println("2. Update Job");
-        System.out.println("3. Delete Job");
-        System.out.println("0. Back");
-        System.out.print("Enter choice: ");
-        
-        String choice = scanner.nextLine().trim();
-        switch (choice) {
-            case "1" -> viewAllJobs();
-            case "2" -> updateJob();
-            case "3" -> deleteJob();
-            case "0" -> {}
-            default -> System.out.println("Invalid option.");
+        while (true) {
+            Refresh.refreshTerminal();
+            MenuPrinter.printHeader("MANAGE JOBS");
+            MenuPrinter.breadcrumb("Main Menu > Manage Jobs");
+            MenuPrinter.printOption("1", "View All Jobs");
+            MenuPrinter.printOption("2", "Update Job");
+            MenuPrinter.printOption("3", "Delete Job");
+            MenuPrinter.printOption("0", "<  Back");
+            MenuPrinter.prompt("Enter choice");
+
+            switch (scanner.nextLine().trim()) {
+                case "1" -> viewAllJobs();
+                case "2" -> updateJob();
+                case "3" -> deleteJob();
+                case "0" -> { return; }
+                default  -> MenuPrinter.error("Invalid option.");
+            }
         }
     }
 
+    /* --------------------------------------------------------- */
     private void viewAllJobs() {
-        List<JobPosting> list = jpm.findAll();
-        if (list.isEmpty()) {
-            System.out.println("No job postings found.");
+        Refresh.refreshTerminal();
+        MenuPrinter.printHeader("ALL JOBS");
+        MenuPrinter.breadcrumb("Main Menu > Manage Jobs > View All Jobs");
+
+        List<JobPosting> jobs = jpm.findAll();
+        if (jobs.isEmpty()) {
+            MenuPrinter.info("No job postings found.");
+            MenuPrinter.pause();
             return;
         }
-        
-        System.out.println("\n=== All Job Postings ===");
-        for (Object obj : list) {
-            JobPosting job = (JobPosting) obj;
-            System.out.println("---------------------------");
-            System.out.println(job.displayString());
-        }
-        System.out.println("---------------------------");
+
+        AsciiTable.print(jobs,
+                new String[]{"ID", "Job Name", "Payment", "Status", "Recruiter"},
+                new int[]{4, 24, 10, 12, 15},
+                j -> new String[]{
+                        String.valueOf(j.getJobId()),
+                        j.getJobName(),
+                        String.format("$%.2f", j.getPayment()),
+                        j.getStatus(),
+                        j.getRecruiterName()
+                });
+        MenuPrinter.pause();
     }
 
+    /* --------------------------------------------------------- */
     private void updateJob() {
-        System.out.print("Enter Job ID to update: ");
+        Refresh.refreshTerminal();
+        MenuPrinter.printHeader("UPDATE JOB");
+        MenuPrinter.breadcrumb("Main Menu > Manage Jobs > Update Job");
+
+        MenuPrinter.prompt("Job ID to update");
         int jobId = readInt();
         JobPosting job = jpm.findById(jobId);
-        
         if (job == null) {
-            System.out.println("ERROR: Job not found.");
+            MenuPrinter.error("Job not found.");
+            MenuPrinter.pause();
             return;
         }
-        
+
         System.out.println("Current job info:");
         System.out.println(job.displayString());
 
-        System.out.print("Enter new job name (leave blank to keep): ");
+        System.out.println("\nLeave blank to keep current value.");
+        MenuPrinter.prompt("New job name");
         String name = scanner.nextLine().trim();
-        System.out.print("Enter new description (leave blank to keep): ");
+        MenuPrinter.prompt("New description");
         String desc = scanner.nextLine().trim();
-        System.out.print("Enter new hours needed (leave blank to keep): ");
+        MenuPrinter.prompt("New hours needed");
         String hours = scanner.nextLine().trim();
-        System.out.print("Enter new payment (leave blank to keep): ");
-        String paymentStr = scanner.nextLine().trim();
-        System.out.print("Enter new status (Available/Closed) (leave blank to keep): ");
-        String status = scanner.nextLine().trim();
-
+        MenuPrinter.prompt("New payment");
+        String payStr = scanner.nextLine().trim();
         Double payment = null;
-        if (!paymentStr.isEmpty()) {
+        if (!payStr.isEmpty()) {
             try {
-                payment = Double.valueOf(paymentStr);
+                payment = Double.valueOf(payStr);
             } catch (NumberFormatException e) {
-                System.out.println("Invalid payment. Update cancelled.");
+                MenuPrinter.error("Invalid payment. Update cancelled.");
+                MenuPrinter.pause();
                 return;
             }
         }
+        MenuPrinter.prompt("New status (Available/Closed)");
+        String status = scanner.nextLine().trim();
 
         boolean ok = jpm.update(jobId,
                 name.isEmpty() ? null : name,
                 desc.isEmpty() ? null : desc,
                 hours.isEmpty() ? null : hours,
                 payment,
-            status.isEmpty() ? null : status,
-            null);
+                status.isEmpty() ? null : status,
+                null);
 
-        if (ok) System.out.println("SUCCESS: Job successfully updated!");
-        else System.out.println("ERROR: Could not update job.");
+        if (ok) MenuPrinter.success("Job successfully updated!");
+        else    MenuPrinter.error("Could not update job.");
+        MenuPrinter.pause();
     }
 
+    /* --------------------------------------------------------- */
     private void deleteJob() {
-        System.out.print("Enter Job ID to delete: ");
+        Refresh.refreshTerminal();
+        MenuPrinter.printHeader("DELETE JOB");
+        MenuPrinter.breadcrumb("Main Menu > Manage Jobs > Delete Job");
+
+        MenuPrinter.prompt("Job ID to delete");
         int jobId = readInt();
         JobPosting job = jpm.findById(jobId);
-        
         if (job == null) {
-            System.out.println("ERROR: Job not found.");
+            MenuPrinter.error("Job not found.");
+            MenuPrinter.pause();
             return;
         }
-        
-        System.out.println("Job info:");
+
         System.out.println(job.displayString());
-        System.out.print("Are you sure you want to delete this job? (Y/N): ");
-        String conf = scanner.nextLine().trim();
-        
-        if (conf.equalsIgnoreCase("Y")) {
+        MenuPrinter.prompt("Are you sure? (y/n)");
+        if (scanner.nextLine().trim().equalsIgnoreCase("y")) {
             boolean removed = jpm.delete(jobId);
-            if (removed) System.out.println("SUCCESS: Job successfully deleted!");
-            else System.out.println("ERROR: Could not delete job.");
+            if (removed) MenuPrinter.success("Job deleted!");
+            else         MenuPrinter.error("Could not delete job.");
         } else {
-            System.out.println("Deletion cancelled.");
+            MenuPrinter.info("Deletion cancelled.");
         }
+        MenuPrinter.pause();
     }
 
-    // ========================================================================
-    //   MARKETPLACE FUNCTIONS
-    // ========================================================================
+    /* =========================================================
+                      3. MANAGE MARKETPLACE
+     ========================================================= */
     private void manageMarketplace() {
-        System.out.println("\n=== Manage Marketplace ===");
-        System.out.println("1. View All Products");
-        System.out.println("2. Add product");
-        System.out.println("3. Update product");
-        System.out.println("4. Delete product");
-        System.out.println("0. Back");
-        System.out.print("Enter choice: ");
+        while (true) {
+            Refresh.refreshTerminal();
+            MenuPrinter.printHeader("MANAGE MARKETPLACE");
+            MenuPrinter.breadcrumb("Main Menu > Manage Marketplace");
+            MenuPrinter.printOption("1", "View All Products");
+            MenuPrinter.printOption("2", "Add Product");
+            MenuPrinter.printOption("3", "Update Product");
+            MenuPrinter.printOption("4", "Delete Product");
+            MenuPrinter.printOption("0", "<  Back");
+            MenuPrinter.prompt("Enter choice");
 
-        String choice = scanner.nextLine().trim();
-        switch (choice) {
-            case "1" -> viewAllProducts();
-            case "2" -> createProduct();
-            case "3" -> updateProduct();
-            case "4" -> deleteProduct();
-            case "0" -> { return; }
-            default -> System.out.println("Invalid option.");
+            switch (scanner.nextLine().trim()) {
+                case "1" -> viewAllProducts();
+                case "2" -> createProduct();
+                case "3" -> updateProduct();
+                case "4" -> deleteProduct();
+                case "0" -> { return; }
+                default  -> MenuPrinter.error("Invalid option.");
+            }
         }
     }
 
+    /* --------------------------------------------------------- */
     private void viewAllProducts() {
+        Refresh.refreshTerminal();
+        MenuPrinter.printHeader("ALL PRODUCTS");
+        MenuPrinter.breadcrumb("Main Menu > Manage Marketplace > View All Products");
+
         List<Product> products = pm.findAll();
         if (products.isEmpty()) {
-            System.out.println("No products found.");
+            MenuPrinter.info("No products found.");
+            MenuPrinter.pause();
             return;
         }
-        
-        System.out.println("\n=== All Products ===");
-        for (Product p : products) {
-            System.out.println("---------------------------");
-            System.out.println(p.displayString());
-        }
-        System.out.println("---------------------------");
+
+        AsciiTable.print(products,
+                new String[]{"ID", "Product Name", "Price", "Quantity", "Status"},
+                new int[]{4, 20, 8, 8, 12},
+                p -> new String[]{
+                        String.valueOf(p.getProductId()),
+                        p.getProductName(),
+                        String.format("$%.2f", p.getPrice()),
+                        String.valueOf(p.getQuantity()),
+                        p.getStatus()
+                });
+        MenuPrinter.pause();
     }
 
+    /* --------------------------------------------------------- */
     private void createProduct() {
         Refresh.refreshTerminal();
-        System.out.println("=== CREATE PRODUCT ===");
+        MenuPrinter.printHeader("CREATE PRODUCT");
+        MenuPrinter.breadcrumb("Main Menu > Manage Marketplace > Create Product");
 
-        System.out.print("Enter product name: ");
+        MenuPrinter.prompt("Product name");
         String name = scanner.nextLine().trim();
-        
-        System.out.print("Enter description: ");
+        MenuPrinter.prompt("Description");
         String desc = scanner.nextLine().trim();
-        
-        System.out.print("Enter price: ");
+        MenuPrinter.prompt("Price ($)");
         double price = readDouble();
-        
-        System.out.print("Enter quantity: ");
+        MenuPrinter.prompt("Quantity");
         int qty = readInt();
-        
-        Product p = pm.create(name, desc, price, qty);
 
-        System.out.println("SUCCESS: Product created! (Product ID: " + p.getProductId() + ")");
+        Product p = pm.create(name, desc, price, qty);
+        MenuPrinter.success("Product created! ID = " + p.getProductId());
+        MenuPrinter.pause();
     }
 
-    private void updateProduct(){
+    /* --------------------------------------------------------- */
+    private void updateProduct() {
         Refresh.refreshTerminal();
-        System.out.println("=== UPDATE PRODUCT ===");
+        MenuPrinter.printHeader("UPDATE PRODUCT");
+        MenuPrinter.breadcrumb("Main Menu > Manage Marketplace > Update Product");
 
-        System.out.print("Enter product ID: ");
+        MenuPrinter.prompt("Product ID");
         int id = readInt();
         Product existing = pm.findById(id);
-
         if (existing == null) {
-            System.out.println("ERROR: Product not found!");
-            pause();
+            MenuPrinter.error("Product not found!");
+            MenuPrinter.pause();
             return;
         }
 
-        System.out.println("\nLeave a field blank to keep the current value.");
-
-        System.out.print("New name (" + existing.getProductName() + "): ");
+        System.out.println("\nLeave blank to keep current value.");
+        MenuPrinter.prompt("New name (" + existing.getProductName() + ")");
         String name = scanner.nextLine().trim();
         if (name.isEmpty()) name = null;
 
-        System.out.print("New description (" + existing.getDescription() + "): ");
+        MenuPrinter.prompt("New description (" + existing.getDescription() + ")");
         String desc = scanner.nextLine().trim();
         if (desc.isEmpty()) desc = null;
 
-        System.out.print("New price (" + existing.getPrice() + "): ");
+        MenuPrinter.prompt("New price (" + existing.getPrice() + ")");
         String priceStr = scanner.nextLine().trim();
-        Double price = priceStr.isEmpty() ? null : Double.parseDouble(priceStr);
+        Double price = priceStr.isEmpty() ? null : Double.valueOf(priceStr);
 
-        System.out.print("New quantity (" + existing.getQuantity() + "): ");
+        MenuPrinter.prompt("New quantity (" + existing.getQuantity() + ")");
         String qtyStr = scanner.nextLine().trim();
-        Integer qty = qtyStr.isEmpty() ? null : Integer.parseInt(qtyStr);
+        Integer qty = qtyStr.isEmpty() ? null : Integer.valueOf(qtyStr);
 
         boolean ok = pm.update(id, name, desc, price, qty, null);
-
-        System.out.println(ok ? "Product updated successfully!" : "Failed to update product.");
-        pause();
+        MenuPrinter.info(ok ? "Product updated successfully!" : "Failed to update product.");
+        MenuPrinter.pause();
     }
 
-    private void deleteProduct(){
+    /* --------------------------------------------------------- */
+    private void deleteProduct() {
         Refresh.refreshTerminal();
-        System.out.println("=== UPDATE PRODUCT ===");
+        MenuPrinter.printHeader("DELETE PRODUCT");
+        MenuPrinter.breadcrumb("Main Menu > Manage Marketplace > Delete Product");
 
-        System.out.print("Enter product ID to delete: ");
+        MenuPrinter.prompt("Product ID to delete");
         int id = readInt();
-
         Product p = pm.findById(id);
-
         if (p == null) {
-            System.out.println("ERROR: Product not found!");
-            pause();
+            MenuPrinter.error("Product not found!");
+            MenuPrinter.pause();
             return;
         }
 
         System.out.println(p.displayString());
-        System.out.print("\nAre you sure you want to delete this product? (y/n): ");
+        MenuPrinter.prompt("Are you sure? (y/n)");
         if (!scanner.nextLine().trim().equalsIgnoreCase("y")) {
-            System.out.println("Cancelled.");
-            pause();
+            MenuPrinter.info("Cancelled.");
+            MenuPrinter.pause();
             return;
         }
-
         boolean removed = pm.delete(id);
-        System.out.println(removed ? "Product deleted successfully!" : "Failed to delete product.");
-
-        pause();
+        MenuPrinter.info(removed ? "Product deleted successfully!" : "Failed to delete product.");
+        MenuPrinter.pause();
     }
-    
 
-    // ========================================================================
-    //   TRANSACTIONS FUNCTIONS
-    // ========================================================================
+    /* =========================================================
+                      4. VIEW ALL TRANSACTIONS
+     ========================================================= */
     private void viewAllTransactions() {
-        System.out.println(">>> View All Transactions (Work in Progress)");
-    }
-
-    // ========================================================================
-    //   REPORTS FUNCTIONS
-    // ========================================================================
-    private void manageReports() {
-        System.out.println("\n=== Manage Reports ===");
-        System.out.println("1. View All Reports");
-        System.out.println("2. Update Report");
-        System.out.println("3. Delete Report");
-        System.out.println("0. Back");
-        System.out.print("Enter choice: ");
-
-        String choice = scanner.nextLine().trim();
-        switch (choice) {
-            case "1" -> viewAllReports();
-            case "2" -> updateReport();
-            case "3" -> deleteReport();
-            case "0" -> { return; }
-            default -> System.out.println("Invalid option.");
-        }
-    }
-
-    private void viewAllReports() {
         Refresh.refreshTerminal();
-        System.out.println("=== ALL REPORTS ===");
+        MenuPrinter.printHeader("ALL TRANSACTIONS");
+        MenuPrinter.breadcrumb("Main Menu > View All Transactions");
+        MenuPrinter.info("Feature not fully implemented yet.");
+        MenuPrinter.pause();
+    }
 
-        List<Report> reports = rm.findAll();
+    /* =========================================================
+                      5. MANAGE REPORTS
+     ========================================================= */
+    private void manageReports() {
+        while (true) {
+            Refresh.refreshTerminal();
+            MenuPrinter.printHeader("MANAGE REPORTS");
+            MenuPrinter.breadcrumb("Main Menu > Manage Reports");
+            MenuPrinter.printOption("1", "View All Reports");
+            MenuPrinter.printOption("2", "Update Report Status");
+            MenuPrinter.printOption("3", "Delete Report");
+            MenuPrinter.printOption("0", "<  Back");
+            MenuPrinter.prompt("Enter choice");
 
-        if (reports.isEmpty()) {
-            System.out.println("No reports found.");
-        } else {
-            for (Report r : reports) {
-                System.out.println("-------------------------");
-                System.out.println(r.displayString());
+            switch (scanner.nextLine().trim()) {
+                case "1" -> viewAllReports();
+                case "2" -> updateReport();
+                case "3" -> deleteReport();
+                case "0" -> { return; }
+                default  -> MenuPrinter.error("Invalid option.");
             }
         }
-        pause();
     }
 
-    private void updateReport() {
+    /* --------------------------------------------------------- */
+    private void viewAllReports() {
         Refresh.refreshTerminal();
-        System.out.println("=== UPDATE REPORT STATUS ===");
+        MenuPrinter.printHeader("ALL REPORTS");
+        MenuPrinter.breadcrumb("Main Menu > Manage Reports > View All Reports");
 
-        System.out.print("Enter report ID: ");
-        int id = readInt();
-
-        Report r = rm.findById(id);
-
-        if (r == null) {
-            System.out.println("ERROR: Report not found!");
-            pause();
+        List<Report> reports = rm.findAll();
+        if (reports.isEmpty()) {
+            MenuPrinter.info("No reports found.");
+            MenuPrinter.pause();
             return;
         }
 
-        System.out.println("\nCurrent status: " + r.getStatus());
-        System.out.println("Choose new status:");
-        System.out.println("1. Pending");
-        System.out.println("2. Reviewed");
-        System.out.println("3. Resolved");
-        System.out.println("4. Dismissed");
+        AsciiTable.print(reports,
+                new String[]{"ID", "Reporter", "Reported User", "Status"},
+                new int[]{4, 16, 16, 12},
+                r -> new String[]{
+                        String.valueOf(r.getReportId()),
+                        r.getReporterName(),
+                        r.getReportedUsername(),
+                        r.getStatus()
+                });
+        MenuPrinter.pause();
+    }
 
-        System.out.print("Enter choice: ");
+    /* --------------------------------------------------------- */
+    private void updateReport() {
+        Refresh.refreshTerminal();
+        MenuPrinter.printHeader("UPDATE REPORT STATUS");
+        MenuPrinter.breadcrumb("Main Menu > Manage Reports > Update Report Status");
+
+        MenuPrinter.prompt("Report ID");
+        int id = readInt();
+        Report r = rm.findById(id);
+        if (r == null) {
+            MenuPrinter.error("Report not found!");
+            MenuPrinter.pause();
+            return;
+        }
+
+        System.out.println("Current status: " + r.getStatus());
+        MenuPrinter.printOption("1", "Pending");
+        MenuPrinter.printOption("2", "Reviewed");
+        MenuPrinter.printOption("3", "Resolved");
+        MenuPrinter.printOption("4", "Dismissed");
+        MenuPrinter.prompt("Choose new status");
         String choice = scanner.nextLine().trim();
         String newStatus = switch (choice) {
             case "1" -> "Pending";
             case "2" -> "Reviewed";
             case "3" -> "Resolved";
             case "4" -> "Dismissed";
-            default -> null;
+            default  -> null;
         };
-
         if (newStatus == null) {
-            System.out.println("Invalid choice.");
-            pause();
+            MenuPrinter.error("Invalid choice.");
+            MenuPrinter.pause();
             return;
         }
 
         boolean ok = rm.updateStatus(id, newStatus);
-        System.out.println(ok ? "Report updated successfully!" : "Failed to update report.");
-        pause();
+        MenuPrinter.info(ok ? "Report updated successfully!" : "Failed to update report.");
+        MenuPrinter.pause();
     }
 
+    /* --------------------------------------------------------- */
     private void deleteReport() {
         Refresh.refreshTerminal();
-        System.out.println("=== DELETE REPORT ===");
+        MenuPrinter.printHeader("DELETE REPORT");
+        MenuPrinter.breadcrumb("Main Menu > Manage Reports > Delete Report");
 
-        System.out.print("Enter report ID to delete: ");
+        MenuPrinter.prompt("Report ID to delete");
         int id = readInt();
-
         Report r = rm.findById(id);
-
         if (r == null) {
-            System.out.println("ERROR: Report not found!");
-            pause();
+            MenuPrinter.error("Report not found!");
+            MenuPrinter.pause();
             return;
         }
 
         System.out.println(r.displayString());
-        System.out.print("\nAre you sure you want to delete this report? (y/n): ");
-
+        MenuPrinter.prompt("Are you sure? (y/n)");
         if (!scanner.nextLine().trim().equalsIgnoreCase("y")) {
-            System.out.println("Cancelled.");
-            pause();
+            MenuPrinter.info("Cancelled.");
+            MenuPrinter.pause();
             return;
         }
-
         boolean removed = rm.delete(id);
-        System.out.println(removed ? "Report deleted successfully!" : "Failed to delete report.");
-        pause();
+        MenuPrinter.info(removed ? "Report deleted successfully!" : "Failed to delete report.");
+        MenuPrinter.pause();
     }
 
-    // ========================================================================
-    //   OTHER FUNCTIONS
-    // ========================================================================
+    /* =========================================================
+                           MISC
+     ========================================================= */
     private boolean confirmLogout() {
         while (true) {
-            System.out.print("Are you sure you would like to logout? (y/n): ");
+            MenuPrinter.prompt("Are you sure you would like to logout? (y/n)");
             String input = scanner.nextLine().trim().toLowerCase();
-
             if (input.equals("y")) {
-                System.out.println("Logging out...");
+                MenuPrinter.info("Logging out...");
                 return true;
             } else if (input.equals("n")) {
-                System.out.println("Returning to menu...");
+                MenuPrinter.info("Returning to menu...");
                 return false;
             } else {
-                System.out.println("Invalid input. Please enter 'y' or 'n'.");
+                MenuPrinter.error("Please enter 'y' or 'n'.");
             }
         }
     }
 
     private int readInt() {
         while (true) {
-            String s = scanner.nextLine().trim();
             try {
-                return Integer.parseInt(s);
-            } catch (NumberFormatException e) {
-                System.out.print("Please enter a valid integer: ");
+                return Integer.parseInt(scanner.nextLine().trim());
+            } catch (NumberFormatException ex) {
+                MenuPrinter.error("Please enter a valid integer.");
             }
         }
     }
 
     private double readDouble() {
-    while (true) {
-        String s = scanner.nextLine().trim();
-        try {
-            return Double.parseDouble(s);
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid number. Try again.");
+        while (true) {
+            try {
+                return Double.parseDouble(scanner.nextLine().trim());
+            } catch (NumberFormatException ex) {
+                MenuPrinter.error("Please enter a valid number.");
+            }
         }
-    }
-    
-    }
-
-    private void pause() {
-        System.out.print("\nPress Enter to continue...");
-        scanner.nextLine();
     }
 }

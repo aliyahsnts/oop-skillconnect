@@ -16,12 +16,10 @@ public class Main {
         TransactionManager transactionManager = new TransactionManager("data/transactions.csv");
         ReportManager reportManager = new ReportManager("data/reports.csv");
 
-
         // Initialize Auth with managers
         Auth.init(userManager, jobPostingManager, applicationManager, productManager, transactionManager, reportManager);
         LoginAuth loginAuth = new LoginAuth();
         RegisterAuth registerAuth = new RegisterAuth();
-
 
         while (true) {
             Refresh.refreshTerminal(); 
@@ -37,7 +35,7 @@ public class Main {
             System.out.println("║   ▒▒▒▒▒▒▒▒███ ▒███▒▒███    ▒███  ▒███        ▒███          ▒███         ▒███      ▒███ ▒███ ▒▒██████  ▒███ ▒▒██████  ▒███▒▒█   ▒███             ▒███     ║");
             System.out.println("║   ███    ▒███ ▒███ ▒▒███   ▒███  ▒███      █ ▒███      █   ▒▒███     ███▒▒███     ███  ▒███  ▒▒█████  ▒███  ▒▒█████  ▒███ ▒   █▒▒███     ███    ▒███     ║");
             System.out.println("║  ▒▒█████████  █████ ▒▒████ █████ ███████████ ███████████    ▒▒█████████  ▒▒▒███████▒   █████  ▒▒█████ █████  ▒▒█████ ██████████ ▒▒█████████     █████    ║");
-            System.out.println("║   ▒▒▒▒▒▒▒▒▒  ▒▒▒▒▒   ▒▒▒▒ ▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒      ▒▒▒▒▒▒▒▒▒     ▒▒▒▒▒▒▒    ▒▒▒▒▒    ▒▒▒▒▒ ▒▒▒▒▒    ▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒   ▒▒▒▒▒▒▒▒▒     ▒▒▒▒▒     ║");
+            System.out.println("║   ▒▒▒▒▒▒▒▒▒  ▒▒▒▒▒   ▒▒▒▒ ▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒      ▒▒▒▒▒▒▒▒▒     ▒▒▒▒▒▒▒    ▒▒▒▒▒    ▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒   ▒▒▒▒▒▒▒▒▒     ▒▒▒▒▒     ║");
             System.out.println("║                                                                                                                                            ║");
             System.out.println("╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝");
             System.out.println();
@@ -48,10 +46,10 @@ public class Main {
             System.out.println("                                │ === Login/Register Interface === │");
             System.out.println("                                ├─────────────────────────────────┤");
             System.out.println("                                │         1. Login                │");
-            System.out.println("                                │         2. Register              │");
+            System.out.println("                                │         2. Register             │");
             System.out.println("                                │         0. Exit                 │");
             System.out.println("                                ├─────────────────────────────────┤");
-            System.out.print("                                │    Enter choice: ");
+            System.out.print("                                  │    Enter choice: ");
             
             String choice = sc.nextLine();
             System.out.println("                                └─────────────────────────────────┘");
