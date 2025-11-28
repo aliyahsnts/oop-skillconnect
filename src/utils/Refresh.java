@@ -3,8 +3,8 @@ package utils;
 public class Refresh {
   public static void refreshTerminal() {
       try {
-          // Sleep 3 seconds
-          Thread.sleep(3000);
+          // Sleep 1 second
+          Thread.sleep(1000);
 
           // Clear terminal (works in most terminals)
           if (System.getProperty("os.name").contains("Windows")) {

@@ -3,6 +3,9 @@ package ui.handlers;
 import models.Report;
 import models.User;
 import managers.ReportManager;
+import utils.MenuPrinter;
+import utils.AsciiTable;
+
 import java.util.List;
 import java.util.Scanner;
 
@@ -19,137 +22,145 @@ public class ReportHandler {
 
     public void showMenu() {
         while (true) {
-            System.out.println("\n===== REPORT MENU =====");
-            System.out.println("1. Create Report");
-            System.out.println("2. View My Reports");
-            System.out.println("3. Update Report");
-            System.out.println("4. Delete Report");
-            System.out.println("0. Back");
-            System.out.print("Enter your choice: ");
-            
+            MenuPrinter.printHeader("REPORT MENU");
+            MenuPrinter.printOption("1", "Create Report");
+            MenuPrinter.printOption("2", "View My Reports");
+            MenuPrinter.printOption("3", "Update Report");
+            MenuPrinter.printOption("4", "Delete Report");
+            MenuPrinter.printOption("0", "Back");
+            MenuPrinter.prompt("Enter choice");
+
             switch (readInt()) {
                 case 1 -> createReport();
                 case 2 -> viewReports();
                 case 3 -> updateReport();
                 case 4 -> deleteReport();
                 case 0 -> { return; }
-                default -> System.out.println("ERROR: Invalid selection.");
+                default -> MenuPrinter.error("Invalid selection.");
             }
         }
     }
 
     private void createReport() {
-        System.out.println("\n--- Create New Report ---");
-        
-        System.out.print("Enter User ID to report: ");
+        MenuPrinter.printHeader("CREATE REPORT");
+
+        MenuPrinter.prompt("Enter User ID to report");
         int reportedId = readInt();
-        
-        System.out.print("Enter username of reported user: ");
+
+        MenuPrinter.prompt("Enter username of reported user");
         String reportedUsername = scanner.nextLine().trim();
-        
-        System.out.print("Enter reason for report: ");
+
+        MenuPrinter.prompt("Enter reason for report");
         String reason = scanner.nextLine().trim();
-        
+
         if (reason.isEmpty()) {
-            System.out.println("ERROR: Reason cannot be empty.");
+            MenuPrinter.error("Reason cannot be empty.");
             return;
         }
-        
+
         rm.create(user.getId(), user.getFullName(), reportedId, reportedUsername, reason);
-        System.out.println("SUCCESS: Report submitted!");
+        MenuPrinter.success("Report submitted!");
+        MenuPrinter.pause();
     }
 
     private void viewReports() {
         List<Report> myReports = rm.findByReporterId(user.getId());
-            
+
         if (myReports.isEmpty()) {
-            System.out.println("You have no reports.");
+            MenuPrinter.info("You have no reports.");
+            MenuPrinter.pause();
             return;
         }
-        
-        System.out.println("\n--- My Reports ---");
-        for (Report r : myReports) {
-            System.out.println(r.displayString());
-            System.out.println("-------------------------------------");
-        }
+
+        /* bullet-proof table */
+        AsciiTable.print(myReports,
+                new String[]{"ID", "Reported User", "Status", "Reason"},
+                new int[]{4, 16, 12, 40},
+                r -> new String[]{
+                        String.valueOf(r.getReportId()),
+                        r.getReportedUsername(),
+                        r.getStatus(),
+                        r.getReason()
+                });
+        MenuPrinter.pause();
     }
 
     private void updateReport() {
-        List<Report> myReports = rm.findPendingByReporter(user.getId());
-            
-        if (myReports.isEmpty()) {
-            System.out.println("You have no pending reports to update.");
+        List<Report> pending = rm.findPendingByReporter(user.getId());
+
+        if (pending.isEmpty()) {
+            MenuPrinter.info("You have no pending reports to update.");
+            MenuPrinter.pause();
             return;
         }
-        
+
         viewReports();
-        
-        System.out.print("\nEnter Report ID to update (0 to cancel): ");
+
+        MenuPrinter.prompt("Enter Report ID to update (0 to cancel)");
         int id = readInt();
         if (id == 0) return;
-        
+
         Report report = rm.findById(id);
         if (report == null || report.getReporterId() != user.getId()) {
-            System.out.println("ERROR: Report not found or you don't have permission.");
+            MenuPrinter.error("Report not found or you don't have permission.");
             return;
         }
-        
         if (!report.getStatus().equalsIgnoreCase("Pending")) {
-            System.out.println("ERROR: Can only update pending reports.");
+            MenuPrinter.error("Can only update pending reports.");
             return;
         }
-        
-        System.out.print("New reason: ");
+
+        MenuPrinter.prompt("New reason");
         String newReason = scanner.nextLine().trim();
-        
         if (newReason.isEmpty()) {
-            System.out.println("ERROR: Reason cannot be empty.");
+            MenuPrinter.error("Reason cannot be empty.");
             return;
         }
-        
+
         report.setReason(newReason);
         rm.persist();
-        System.out.println("SUCCESS: Report updated!");
+        MenuPrinter.success("Report updated!");
+        MenuPrinter.pause();
     }
 
     private void deleteReport() {
-        List<Report> myReports = rm.findPendingByReporter(user.getId());
-            
-        if (myReports.isEmpty()) {
-            System.out.println("You have no pending reports to delete.");
+        List<Report> pending = rm.findPendingByReporter(user.getId());
+
+        if (pending.isEmpty()) {
+            MenuPrinter.info("You have no pending reports to delete.");
+            MenuPrinter.pause();
             return;
         }
-        
+
         viewReports();
-        
-        System.out.print("\nEnter Report ID to delete (0 to cancel): ");
+
+        MenuPrinter.prompt("Enter Report ID to delete (0 to cancel)");
         int id = readInt();
         if (id == 0) return;
-        
+
         Report report = rm.findById(id);
         if (report == null || report.getReporterId() != user.getId()) {
-            System.out.println("ERROR: Report not found or you don't have permission.");
+            MenuPrinter.error("Report not found or you don't have permission.");
             return;
         }
-        
         if (!report.getStatus().equalsIgnoreCase("Pending")) {
-            System.out.println("ERROR: Can only delete pending reports.");
+            MenuPrinter.error("Can only delete pending reports.");
             return;
         }
-        
-        if (rm.delete(id)) {
-            System.out.println("SUCCESS: Report deleted!");
-        } else {
-            System.out.println("ERROR: Could not delete report.");
-        }
+
+        if (rm.delete(id))
+            MenuPrinter.success("Report deleted!");
+        else
+            MenuPrinter.error("Could not delete report.");
+        MenuPrinter.pause();
     }
 
     private int readInt() {
         while (true) {
             try {
-                return Integer.parseInt(scanner.nextLine());
+                return Integer.parseInt(scanner.nextLine().trim());
             } catch (NumberFormatException e) {
-                System.out.print("Invalid input. Please enter a number: ");
+                MenuPrinter.error("Please enter a valid number.");
             }
         }
     }

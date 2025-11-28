@@ -1,7 +1,9 @@
 package ui.handlers;
 
 import models.Jobseeker;
+import utils.MenuPrinter;
 import utils.ResumeGenerator;
+
 import java.util.List;
 import java.util.Scanner;
 
@@ -16,68 +18,65 @@ public class ResumeHandler {
 
     public void showMenu() {
         while (true) {
-            System.out.println("\n===== My Résumé =====");
+            MenuPrinter.printHeader("MY RÉSUMÉ");
             viewResume();
-            System.out.println("1. Edit Resume");
-            System.out.println("0. Back");
-            System.out.print("Enter your choice: ");
-            
+            MenuPrinter.printOption("1", "Edit Résumé");
+            MenuPrinter.printOption("0", "Back");
+            MenuPrinter.prompt("Enter choice");
+
             switch (readInt()) {
                 case 1 -> editResume();
                 case 0 -> { return; }
-                default -> System.out.println("ERROR: Invalid selection.");
+                default -> MenuPrinter.error("Invalid selection.");
             }
         }
     }
 
     private void viewResume() {
-        System.out.println("\n==========  RÉSUMÉ  ==========");
-        System.out.println("Name        : " + jobseeker.getFullName());
-        System.out.println("Phone       : " + nullSafe(jobseeker.getPhone()));
-        System.out.println("Address     : " + nullSafe(jobseeker.getAddress()));
-        System.out.println("Summary     : " + nullSafe(jobseeker.getSummary()));
-        System.out.println("Education   : " + nullSafe(jobseeker.getEducation()));
-        System.out.println("Skills      : " + listSafe(jobseeker.getSkillList()));
-        System.out.println("Experience  : " + listSafe(jobseeker.getExperienceList()));
-        System.out.println("===============================");
+        System.out.println();
+        System.out.println("Name       : " + jobseeker.getFullName());
+        System.out.println("Phone      : " + nullSafe(jobseeker.getPhone()));
+        System.out.println("Address    : " + nullSafe(jobseeker.getAddress()));
+        System.out.println("Summary    : " + nullSafe(jobseeker.getSummary()));
+        System.out.println("Education  : " + nullSafe(jobseeker.getEducation()));
+        System.out.println("Skills     : " + listSafe(jobseeker.getSkillList()));
+        System.out.println("Experience : " + listSafe(jobseeker.getExperienceList()));
+        System.out.println();
     }
 
     private void editResume() {
-        System.out.println("\n====== EDIT RÉSUMÉ ======");
+        MenuPrinter.printHeader("EDIT RÉSUMÉ");
 
         jobseeker.setPhone(ask("Phone number", jobseeker.getPhone()));
         jobseeker.setAddress(ask("Address", jobseeker.getAddress()));
         jobseeker.setSummary(ask("Professional summary", jobseeker.getSummary()));
         jobseeker.setEducation(ask("Education", jobseeker.getEducation()));
 
-        System.out.print("Skills (comma-separated): ");
+        MenuPrinter.prompt("Skills (comma-separated)");
         String skillsLine = scanner.nextLine().trim();
         if (!skillsLine.isEmpty()) {
             jobseeker.getSkillList().clear();
-            for (String s : skillsLine.split("\\s*,\\s*")) {
-                jobseeker.addSkill(s);
-            }
+            for (String s : skillsLine.split("\\s*,\\s*")) jobseeker.addSkill(s);
         }
 
-        System.out.print("Experience (comma-separated jobs): ");
+        MenuPrinter.prompt("Experience (comma-separated jobs)");
         String expLine = scanner.nextLine().trim();
         if (!expLine.isEmpty()) {
             jobseeker.getExperienceList().clear();
-            for (String e : expLine.split("\\s*,\\s*")) {
-                jobseeker.addExperience(e);
-            }
+            for (String e : expLine.split("\\s*,\\s*")) jobseeker.addExperience(e);
         }
 
         try {
             ResumeGenerator.generateCSVForRegistration(jobseeker);
-            System.out.println("Résumé saved and CSV updated.");
+            MenuPrinter.success("Résumé saved and CSV updated.");
         } catch (Exception ex) {
-            System.out.println("ERROR: could not write CSV – " + ex.getMessage());
+            MenuPrinter.error("Could not write CSV – " + ex.getMessage());
         }
+        MenuPrinter.pause();
     }
 
     private String ask(String field, String current) {
-        System.out.printf("%s%s: ", field, (current == null ? "" : " (current: " + current + ")"));
+        MenuPrinter.prompt(field + (current == null ? "" : " (current: " + current + ")"));
         String in = scanner.nextLine().trim();
         return in.isEmpty() ? current : in;
     }
@@ -85,9 +84,9 @@ public class ResumeHandler {
     private int readInt() {
         while (true) {
             try {
-                return Integer.parseInt(scanner.nextLine());
+                return Integer.parseInt(scanner.nextLine().trim());
             } catch (NumberFormatException e) {
-                System.out.print("Invalid input. Please enter a number: ");
+                MenuPrinter.error("Please enter a valid number.");
             }
         }
     }
@@ -95,7 +94,7 @@ public class ResumeHandler {
     private String nullSafe(String s) {
         return (s == null || s.isBlank()) ? "N/A" : s;
     }
-    
+
     private String listSafe(List<String> list) {
         return list.isEmpty() ? "N/A" : String.join("; ", list);
     }
