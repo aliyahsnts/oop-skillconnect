@@ -33,7 +33,6 @@ public class Main {
             
             System.out.println();
             System.out.print("                                                            Enter choice: ");
-            
             String choice = sc.nextLine();
 
             // Handle menu choices

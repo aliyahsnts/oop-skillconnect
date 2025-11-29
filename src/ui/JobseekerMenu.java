@@ -29,12 +29,15 @@ public class JobseekerMenu {
                          ApplicationManager am,
                          ProductManager pm,
                          TransactionManager tm,
-                         ReportManager rm) {
+                         ReportManager rm,
+                        UserManager um) //<-- added this 
+                        {
         this.jobseeker = jobseeker;
         this.jpm = jpm;
         this.am = am;
         this.tm = tm;
-        this.reportHandler = new ReportHandler(jobseeker, rm, scanner);
+        this.um = um; //<-- added this
+        this.reportHandler = new ReportHandler(jobseeker, rm, um, scanner); // added um here
         this.marketplaceHandler = new MarketplaceHandler(jobseeker, pm, tm, scanner);
         this.resumeHandler = new ResumeHandler(jobseeker, scanner);
     }

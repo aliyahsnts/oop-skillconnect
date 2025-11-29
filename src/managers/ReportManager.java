@@ -10,60 +10,45 @@ public class ReportManager extends BaseManager<Report> {
         super(csvFilePath, "reportId,reporterId,reporterName,reportedUserId,reportedUsername,reason,timestamp,status");
     }
 
-    // =========================================
-    //        IMPLEMENT ABSTRACT METHODS
-    // =========================================
-
+    /* ==== CHANGES SUMMARY =========================================
+       Added findByStatus(String) to enable admin filtering.
+       ============================================================== */
     @Override
     protected Report parseEntity(String[] parts) {
-        int reportId = Integer.parseInt(parts[0].trim());
-        int reporterId = Integer.parseInt(parts[1].trim());
-        String reporterName = parts[2].trim();
-        int reportedUserId = Integer.parseInt(parts[3].trim());
+        int reportId      = Integer.parseInt(parts[0].trim());
+        int reporterId    = Integer.parseInt(parts[1].trim());
+        String reporterName   = parts[2].trim();
+        int reportedUserId    = Integer.parseInt(parts[3].trim());
         String reportedUsername = parts[4].trim();
-        String reason = parts[5].trim();
-        String timestamp = parts[6].trim();
-        String status = parts[7].trim();
-        
-        return new Report(reportId, reporterId, reporterName, reportedUserId, 
+        String reason     = parts[5].trim();
+        String timestamp  = parts[6].trim();
+        String status     = parts[7].trim();
+        return new Report(reportId, reporterId, reporterName, reportedUserId,
                          reportedUsername, reason, timestamp, status);
     }
 
     @Override
-    protected String toCSVLine(Report report) {
-        return report.toCSVLine();
-    }
+    protected String toCSVLine(Report report) { return report.toCSVLine(); }
 
     @Override
-    protected int getId(Report report) {
-        return report.getReportId();
-    }
+    protected int getId(Report report) { return report.getReportId(); }
 
     @Override
-    protected int getMinimumColumns() {
-        return 8;
-    }
+    protected int getMinimumColumns() { return 8; }
 
     @Override
-    protected String getEntityName() {
-        return "report";
-    }
+    protected String getEntityName() { return "report"; }
 
     @Override
-    protected int getStartingId() {
-        return 4001;
-    }
+    protected int getStartingId() { return 4001; }
 
-    // =========================================
-    //           CREATE & UPDATE
-    // =========================================
-
-    public Report create(int reporterId, String reporterName, int reportedUserId, 
+    /* ---------- CRUD ---------- */
+    public Report create(int reporterId, String reporterName, int reportedUserId,
                         String reportedUsername, String reason) {
         int id = nextId();
         String timestamp = Report.getCurrentTimestamp();
-        Report r = new Report(id, reporterId, reporterName, reportedUserId, 
-                             reportedUsername, reason, timestamp, "Pending");
+        Report r = new Report(id, reporterId, reporterName, reportedUserId,
+                             reportedUsername, reason, timestamp, Report.STATUS_PENDING);
         entities.add(r);
         persist();
         return r;
@@ -77,44 +62,29 @@ public class ReportManager extends BaseManager<Report> {
         return true;
     }
 
-    // =========================================
-    //           QUERY METHODS
-    // =========================================
-
-    /**
-     * Find all reports created by a specific reporter
-     */
+    /* ---------- Queries ---------- */
     public List<Report> findByReporterId(int reporterId) {
         return entities.stream()
-            .filter(r -> r.getReporterId() == reporterId)
-            .collect(Collectors.toList());
+                .filter(r -> r.getReporterId() == reporterId)
+                .collect(Collectors.toList());
     }
 
-    /**
-     * Find all reports against a specific user
-     */
     public List<Report> findByReportedUserId(int reportedUserId) {
         return entities.stream()
-            .filter(r -> r.getReportedUserId() == reportedUserId)
-            .collect(Collectors.toList());
+                .filter(r -> r.getReportedUserId() == reportedUserId)
+                .collect(Collectors.toList());
     }
 
-    /**
-     * Find all reports with a specific status
-     */
     public List<Report> findByStatus(String status) {
         return entities.stream()
-            .filter(r -> r.getStatus().equalsIgnoreCase(status))
-            .collect(Collectors.toList());
+                .filter(r -> r.getStatus().equalsIgnoreCase(status))
+                .collect(Collectors.toList());
     }
 
-    /**
-     * Find pending reports by reporter
-     */
     public List<Report> findPendingByReporter(int reporterId) {
         return entities.stream()
-            .filter(r -> r.getReporterId() == reporterId)
-            .filter(r -> r.getStatus().equalsIgnoreCase("Pending"))
-            .collect(Collectors.toList());
+                .filter(r -> r.getReporterId() == reporterId)
+                .filter(r -> r.getStatus().equalsIgnoreCase(Report.STATUS_PENDING))
+                .collect(Collectors.toList());
     }
 }

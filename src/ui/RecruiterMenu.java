@@ -8,8 +8,10 @@ import utils.MenuPrinter;
 import utils.ApplicationFormGenerator;
 import utils.Refresh;
 import utils.AsciiTable;
+import ui.handlers.ReportHandler;   // NEW
 
 public class RecruiterMenu {
+
     private final Recruiter recruiter;
     private final JobPostingManager jpm;
     private final ApplicationManager am;
@@ -19,6 +21,7 @@ public class RecruiterMenu {
     private final UserManager um;   
     private final Scanner scanner = new Scanner(System.in);
     private final ApplicationFormGenerator formGen = new ApplicationFormGenerator();
+    private final ReportHandler reportHandler;   // NEW
 
     public RecruiterMenu(Recruiter recruiter,
                          JobPostingManager jpm,
@@ -34,14 +37,15 @@ public class RecruiterMenu {
         this.tm = tm;
         this.rm = rm;
         this.um = um;               
+        this.reportHandler = new ReportHandler(recruiter, rm, um, scanner);   // NEW
     }
 
     /* =========================================================
                            MAIN LOOP
-     ========================================================= */
+    ========================================================= */
     public void show() {
         while (true) {
-            Refresh.refreshTerminal();          // ← clean screen
+            Refresh.refreshTerminal();
             MenuPrinter.printHeader("RECRUITER MENU");
             MenuPrinter.breadcrumb("Main Menu");
             System.out.println(" Recruiter: " + recruiter.getFullName());
@@ -56,6 +60,7 @@ public class RecruiterMenu {
             MenuPrinter.printOption("8", "Send Salary to Jobseeker");
             MenuPrinter.printOption("9", "Purchase Product");
             MenuPrinter.printOption("10", "View Transaction History");
+            MenuPrinter.printOption("11", "My Reports");      // <-- NEW
             MenuPrinter.printOption("0", "<  Logout");
             MenuPrinter.prompt("Enter choice");
 
@@ -70,6 +75,7 @@ public class RecruiterMenu {
                 case "8" -> sendSalary();
                 case "9" -> purchaseProduct();
                 case "10" -> viewTransactions();
+                case "11" -> reportHandler.showMenu();   // <-- NEW
                 case "0" -> {
                     MenuPrinter.info("Logging out...");
                     return;
@@ -81,9 +87,9 @@ public class RecruiterMenu {
 
     /* =========================================================
                            1. CREATE
-     ========================================================= */
+    ========================================================= */
     private void createJobPosting() {
-        Refresh.refreshTerminal();          // ← clean screen
+        Refresh.refreshTerminal();
         MenuPrinter.printHeader("CREATE JOB POSTING");
         MenuPrinter.prompt("Job Name");
         String jobName = scanner.nextLine().trim();
@@ -104,9 +110,9 @@ public class RecruiterMenu {
 
     /* =========================================================
                            2. VIEW MY JOBS
-     ========================================================= */
+    ========================================================= */
     private void viewMyJobs() {
-        Refresh.refreshTerminal();          // ← clean screen
+        Refresh.refreshTerminal();
         MenuPrinter.printHeader("MY JOB POSTINGS");
         MenuPrinter.breadcrumb("Main Menu > My Job Postings");
 
@@ -131,9 +137,9 @@ public class RecruiterMenu {
 
     /* =========================================================
                            3. UPDATE
-     ========================================================= */
+    ========================================================= */
     private void updateJobPosting() {
-        Refresh.refreshTerminal();          // ← clean screen
+        Refresh.refreshTerminal();
         MenuPrinter.printHeader("UPDATE JOB POSTING");
         MenuPrinter.prompt("Job ID to update");
         int jobId = readInt();
@@ -177,9 +183,9 @@ public class RecruiterMenu {
 
     /* =========================================================
                            4. DELETE
-     ========================================================= */
+    ========================================================= */
     private void deleteJobPosting() {
-        Refresh.refreshTerminal();          // ← clean screen
+        Refresh.refreshTerminal();
         MenuPrinter.printHeader("DELETE JOB POSTING");
         MenuPrinter.prompt("Job ID to delete");
         int jobId = readInt();
@@ -203,10 +209,10 @@ public class RecruiterMenu {
     }
 
     /* =========================================================
-           5. VIEW APPLICANTS
-     ========================================================= */
+                      5. VIEW APPLICANTS
+    ========================================================= */
     private void viewApplicantsByJob() {
-        Refresh.refreshTerminal();          // ← clean screen
+        Refresh.refreshTerminal();
         MenuPrinter.printHeader("APPLICANTS FOR JOB");
         MenuPrinter.prompt("Job ID to view applicants");
         int jobId = readInt();
@@ -236,12 +242,9 @@ public class RecruiterMenu {
         processApplicants(jobId);
     }
 
-    /* ---------------------------------------------------------
-       applicant sub-menu
-     --------------------------------------------------------- */
     private void processApplicants(int jobId) {
         while (true) {
-            Refresh.refreshTerminal();          // ← clean screen
+            Refresh.refreshTerminal();
             MenuPrinter.printHeader("APPLICANT ACTIONS");
             MenuPrinter.breadcrumb("Main Menu > Applicants for Job " + jobId);
             MenuPrinter.printOption("1", "Change Application Status (Hire/Decline)");
@@ -280,7 +283,7 @@ public class RecruiterMenu {
     }
 
     private void viewFullApplicationDetails(int jobId) {
-        Refresh.refreshTerminal();          // ← clean screen
+        Refresh.refreshTerminal();
         MenuPrinter.printHeader("APPLICATION DETAILS");
         MenuPrinter.prompt("Application ID to view");
         int appId = readInt();
@@ -294,26 +297,22 @@ public class RecruiterMenu {
         MenuPrinter.pause();
     }
 
-
-        /* ====================  FINANCIAL OPERATIONS  ==================== */
-
-     
+    /* =========================================================
+                      FINANCIAL OPERATIONS
+    ========================================================= */
     private void depositFunds() {
         System.out.println("\n--- Deposit Funds ---");
-        System.out.println("Balance BEFORE deposit: ₱" + um.getBalance(recruiter.getId())); // ADD THIS
+        System.out.println("Balance BEFORE deposit: ₱" + um.getBalance(recruiter.getId()));
         System.out.print("Enter amount to deposit (₱): ");
         double amount = readDouble();
         if (amount <= 0) {
             System.out.println("ERROR: Amount must be positive.");
-        return;
-    }
-
-    // Delegate deposit behavior to transaction manager
+            return;
+        }
         boolean ok = tm.deposit(recruiter.getId(), amount, "Deposit by recruiter");
         System.out.println(ok ? "SUCCESS: Funds deposited!" : "ERROR: Deposit failed.");
-}
+    }
 
-    // Withdraw funds for the recruiter
     private void withdrawFunds() {
         System.out.println("\n--- Withdraw Funds ---");
         System.out.print("Enter amount to withdraw (₱): ");
@@ -322,22 +321,19 @@ public class RecruiterMenu {
             System.out.println("ERROR: Amount must be positive.");
             return;
         }
-
         double balance = um.getBalance(recruiter.getId());
         if (balance < amount) {
             System.out.println("ERROR: Insufficient funds. Current balance: ₱" + balance);
             return;
         }
-
         boolean ok = tm.withdraw(recruiter.getId(), amount, "Withdraw by recruiter");
         System.out.println(ok ? "SUCCESS: Withdrawal completed." : "ERROR: Withdrawal failed.");
     }
 
-    // Send salary from recruiter to jobseeker
     private void sendSalary() {
         Refresh.refreshTerminal();
         MenuPrinter.printHeader("SEND SALARY");
-        
+
         MenuPrinter.prompt("Enter Jobseeker User ID");
         int jsId = readInt();
         User js = um.findById(jsId);
@@ -349,7 +345,7 @@ public class RecruiterMenu {
 
         MenuPrinter.prompt("Enter job name/description");
         String jobName = scanner.nextLine().trim();
-        
+
         MenuPrinter.prompt("Enter salary amount");
         double amount = readDouble();
         if (amount <= 0) {
@@ -367,9 +363,8 @@ public class RecruiterMenu {
 
         boolean ok = tm.transfer(recruiter.getId(), jsId, amount, "Salary: " + jobName);
         if (ok) {
-            // Also record as salary transaction for better tracking
             tm.recordSalary(recruiter.getId(), recruiter.getFullName(),
-                        jsId, js.getFullName(), amount, jobName);
+                            jsId, js.getFullName(), amount, jobName);
             MenuPrinter.success("Salary sent successfully!");
             MenuPrinter.info("Amount: $" + amount);
             MenuPrinter.info("To: " + js.getFullName());
@@ -379,103 +374,100 @@ public class RecruiterMenu {
         MenuPrinter.pause();
     }
 
-    // Purchase product as recruiter
     private void purchaseProduct() {
-    Refresh.refreshTerminal();
-    MenuPrinter.printHeader("PURCHASE PRODUCT");
-    MenuPrinter.breadcrumb("Main Menu > Purchase Product");
-    
-    List<Product> products = pm.findAll();
-    if (products == null || products.isEmpty()) {
-        MenuPrinter.info("No products available.");
+        Refresh.refreshTerminal();
+        MenuPrinter.printHeader("PURCHASE PRODUCT");
+        MenuPrinter.breadcrumb("Main Menu > Purchase Product");
+
+        List<Product> products = pm.findAll();
+        if (products == null || products.isEmpty()) {
+            MenuPrinter.info("No products available.");
+            System.out.print("\nPress ENTER to continue...");
+            scanner.nextLine();
+            return;
+        }
+
+        System.out.println();
+        for (Product p : products) {
+            System.out.println(p.displayString());
+            System.out.println("-------------------------------------");
+        }
+
+        MenuPrinter.prompt("Enter Product ID to purchase (0 to cancel)");
+        int pid = readInt();
+        if (pid == 0) return;
+
+        Product product = pm.findById(pid);
+        if (product == null) {
+            MenuPrinter.error("Product not found.");
+            System.out.print("\nPress ENTER to continue...");
+            scanner.nextLine();
+            return;
+        }
+
+        MenuPrinter.prompt("Enter quantity");
+        int qty = readInt();
+        if (qty <= 0) {
+            MenuPrinter.error("Quantity must be positive.");
+            System.out.print("\nPress ENTER to continue...");
+            scanner.nextLine();
+            return;
+        }
+
+        double total = product.getPrice() * qty;
+        double balance = um.getBalance(recruiter.getId());
+        if (balance < total) {
+            MenuPrinter.error("Insufficient funds. Current balance: ₱" + balance);
+            System.out.print("\nPress ENTER to continue...");
+            scanner.nextLine();
+            return;
+        }
+
+        boolean adjusted = um.adjustBalance(recruiter.getId(), -total);
+        if (!adjusted) {
+            MenuPrinter.error("Failed to deduct balance; purchase aborted.");
+            System.out.print("\nPress ENTER to continue...");
+            scanner.nextLine();
+            return;
+        }
+
+        boolean recorded = tm.recordPurchase(
+                recruiter.getId(),
+                recruiter.getFullName(),
+                product.getProductId(),
+                product.getProductName(),
+                qty,
+                total);
+
+        if (!recorded) {
+            MenuPrinter.error("Failed to record purchase transaction.");
+        }
+
+        MenuPrinter.success("Purchased " + qty + " x " + product.getProductName() + " for $" + total + ".");
         System.out.print("\nPress ENTER to continue...");
         scanner.nextLine();
-        return;
     }
 
-    System.out.println();
-    for (Product p : products) {
-        System.out.println(p.displayString());
-        System.out.println("-------------------------------------");
-    }
-
-    MenuPrinter.prompt("Enter Product ID to purchase (0 to cancel)");
-    int pid = readInt();
-    if (pid == 0) return;
-    
-    Product product = pm.findById(pid);
-    if (product == null) {
-        MenuPrinter.error("Product not found.");
-        System.out.print("\nPress ENTER to continue...");
-        scanner.nextLine();
-        return;
-    }
-
-    MenuPrinter.prompt("Enter quantity");
-    int qty = readInt();
-    if (qty <= 0) {
-        MenuPrinter.error("Quantity must be positive.");
-        System.out.print("\nPress ENTER to continue...");
-        scanner.nextLine();
-        return;
-    }
-
-    double total = product.getPrice() * qty;
-    double balance = um.getBalance(recruiter.getId());
-    if (balance < total) {
-        MenuPrinter.error("Insufficient funds. Current balance: ₱" + balance);
-        System.out.print("\nPress ENTER to continue...");
-        scanner.nextLine();
-        return;
-    }
-
-    // Debit recruiter balance first to ensure atomic behavior
-    boolean adjusted = um.adjustBalance(recruiter.getId(), -total);
-    if (!adjusted) {
-        MenuPrinter.error("Failed to deduct balance; purchase aborted.");
-        System.out.print("\nPress ENTER to continue...");
-        scanner.nextLine();
-        return;
-    }
-
-    // Record transaction
-    boolean recorded = tm.recordPurchase(
-        recruiter.getId(),
-        recruiter.getFullName(),
-        product.getProductId(),
-        product.getProductName(),
-        qty,
-        total);
-
-    if (!recorded) {
-        MenuPrinter.error("Failed to record purchase transaction.");
-    }
-
-    MenuPrinter.success("Purchased " + qty + " x " + product.getProductName() + " for $" + total + ".");
-    System.out.print("\nPress ENTER to continue...");
-    scanner.nextLine();
-}
-    // View transaction history for recruiter
     private void viewTransactions() {
-    System.out.println("\n--- Transaction History ---");
-    List<Transaction> txs = tm.findByUserId(recruiter.getId());
-    if (txs == null || txs.isEmpty()) {
-        System.out.println("No transactions found.");
+        System.out.println("\n--- Transaction History ---");
+        List<Transaction> txs = tm.findByUserId(recruiter.getId());
+        if (txs == null || txs.isEmpty()) {
+            System.out.println("No transactions found.");
+            System.out.print("\nPress ENTER to continue...");
+            scanner.nextLine();
+            return;
+        }
+        for (Transaction tx : txs) {
+            System.out.println(tx.displayString());
+            System.out.println("-------------------------------------");
+        }
         System.out.print("\nPress ENTER to continue...");
-        scanner.nextLine();  // Use the SAME scanner from your class
-        return;
+        scanner.nextLine();
     }
-    for (Transaction tx : txs) {
-        System.out.println(tx.displayString());
-        System.out.println("-------------------------------------");
-    }
-    System.out.print("\nPress ENTER to continue...");
-    scanner.nextLine();  // Use the SAME scanner from your class
-}
 
     /* =========================================================
                            HELPERS
-     ========================================================= */
+    ========================================================= */
     private int readInt() {
         while (true) {
             try {
@@ -485,6 +477,7 @@ public class RecruiterMenu {
             }
         }
     }
+
     private double readDouble() {
         while (true) {
             try {

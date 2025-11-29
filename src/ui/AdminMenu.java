@@ -1,5 +1,7 @@
 package ui;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import models.*;
@@ -9,6 +11,7 @@ import utils.Refresh;
 import utils.AsciiTable;
 
 public class AdminMenu {
+
     private final Admin admin;
     private final UserManager userManager;
     private final JobPostingManager jpm;
@@ -17,8 +20,13 @@ public class AdminMenu {
     private final ReportManager rm;
     private final Scanner scanner = new Scanner(System.in);
 
-    public AdminMenu(Admin admin, UserManager um, JobPostingManager jpm, ApplicationManager am,
-                     ProductManager pm, TransactionManager tm, ReportManager rm) {
+    public AdminMenu(Admin admin,
+                     UserManager um,
+                     JobPostingManager jpm,
+                     ApplicationManager am,
+                     ProductManager pm,
+                     TransactionManager tm,
+                     ReportManager rm) {
         this.admin = admin;
         this.userManager = um;
         this.jpm = jpm;
@@ -29,7 +37,7 @@ public class AdminMenu {
 
     /* =========================================================
                            MAIN LOOP
-     ========================================================= */
+    ========================================================= */
     public void show() {
         while (true) {
             Refresh.refreshTerminal();
@@ -61,7 +69,7 @@ public class AdminMenu {
 
     /* =========================================================
                            1. MANAGE USERS
-     ========================================================= */
+    ========================================================= */
     private void manageUsers() {
         while (true) {
             Refresh.refreshTerminal();
@@ -85,7 +93,6 @@ public class AdminMenu {
         }
     }
 
-    /* --------------------------------------------------------- */
     private void viewAllAccounts() {
         Refresh.refreshTerminal();
         MenuPrinter.printHeader("ALL USERS");
@@ -120,7 +127,6 @@ public class AdminMenu {
         };
     }
 
-    /* --------------------------------------------------------- */
     private void createAccount() {
         Refresh.refreshTerminal();
         MenuPrinter.printHeader("CREATE ACCOUNT");
@@ -157,7 +163,6 @@ public class AdminMenu {
         MenuPrinter.pause();
     }
 
-    /* --------------------------------------------------------- */
     private void updateAccount() {
         Refresh.refreshTerminal();
         MenuPrinter.printHeader("UPDATE ACCOUNT");
@@ -188,7 +193,6 @@ public class AdminMenu {
         MenuPrinter.pause();
     }
 
-    /* --------------------------------------------------------- */
     private void deleteAccount() {
         Refresh.refreshTerminal();
         MenuPrinter.printHeader("DELETE ACCOUNT");
@@ -220,7 +224,7 @@ public class AdminMenu {
 
     /* =========================================================
                            2. MANAGE JOBS
-     ========================================================= */
+    ========================================================= */
     private void manageJobs() {
         while (true) {
             Refresh.refreshTerminal();
@@ -242,7 +246,6 @@ public class AdminMenu {
         }
     }
 
-    /* --------------------------------------------------------- */
     private void viewAllJobs() {
         Refresh.refreshTerminal();
         MenuPrinter.printHeader("ALL JOBS");
@@ -268,7 +271,6 @@ public class AdminMenu {
         MenuPrinter.pause();
     }
 
-    /* --------------------------------------------------------- */
     private void updateJob() {
         Refresh.refreshTerminal();
         MenuPrinter.printHeader("UPDATE JOB");
@@ -321,7 +323,6 @@ public class AdminMenu {
         MenuPrinter.pause();
     }
 
-    /* --------------------------------------------------------- */
     private void deleteJob() {
         Refresh.refreshTerminal();
         MenuPrinter.printHeader("DELETE JOB");
@@ -350,7 +351,7 @@ public class AdminMenu {
 
     /* =========================================================
                       3. MANAGE MARKETPLACE
-     ========================================================= */
+    ========================================================= */
     private void manageMarketplace() {
         while (true) {
             Refresh.refreshTerminal();
@@ -374,7 +375,6 @@ public class AdminMenu {
         }
     }
 
-    /* --------------------------------------------------------- */
     private void viewAllProducts() {
         Refresh.refreshTerminal();
         MenuPrinter.printHeader("ALL PRODUCTS");
@@ -400,7 +400,6 @@ public class AdminMenu {
         MenuPrinter.pause();
     }
 
-    /* --------------------------------------------------------- */
     private void createProduct() {
         Refresh.refreshTerminal();
         MenuPrinter.printHeader("CREATE PRODUCT");
@@ -420,7 +419,6 @@ public class AdminMenu {
         MenuPrinter.pause();
     }
 
-    /* --------------------------------------------------------- */
     private void updateProduct() {
         Refresh.refreshTerminal();
         MenuPrinter.printHeader("UPDATE PRODUCT");
@@ -457,7 +455,6 @@ public class AdminMenu {
         MenuPrinter.pause();
     }
 
-    /* --------------------------------------------------------- */
     private void deleteProduct() {
         Refresh.refreshTerminal();
         MenuPrinter.printHeader("DELETE PRODUCT");
@@ -486,212 +483,308 @@ public class AdminMenu {
 
     /* =========================================================
                       4. VIEW ALL TRANSACTIONS
-     ========================================================= */
+    ========================================================= */
     private void viewAllTransactions() {
-    while (true) {
-        Refresh.refreshTerminal();
-        MenuPrinter.printHeader("TRANSACTIONS");
-        MenuPrinter.breadcrumb("Main Menu > Transactions");
-        MenuPrinter.printOption("1", "View All Transactions");
-        MenuPrinter.printOption("2", "Filter by Type");
-        MenuPrinter.printOption("3", "Filter by User");
-        MenuPrinter.printOption("4", "View Transaction Details");
-        MenuPrinter.printOption("0", "<  Back");
-        MenuPrinter.prompt("Enter choice");
-
-        switch (scanner.nextLine().trim()) {
-            case "1" -> viewAllTransactionsList();
-            case "2" -> filterByType();
-            case "3" -> filterByUser();
-            case "4" -> viewTransactionDetails();
-            case "0" -> { return; }
-            default  -> MenuPrinter.error("Invalid option.");
-        }
-    }
-}
-
-private void viewAllTransactionsList() {
-    Refresh.refreshTerminal();
-    MenuPrinter.printHeader("ALL TRANSACTIONS");
-    MenuPrinter.breadcrumb("Main Menu > Transactions > View All");
-
-    List<Transaction> txs = tm.findAll();
-    if (txs.isEmpty()) {
-        MenuPrinter.info("No transactions found.");
-        MenuPrinter.pause();
-        return;
-    }
-
-    AsciiTable.print(txs,
-            new String[]{"ID", "Type", "From", "To", "Amount", "Date"},
-            new int[]{6, 10, 20, 20, 12, 20},
-            t -> new String[]{
-                    String.valueOf(t.getTransactionId()),
-                    t.getType(),
-                    t.getFromUsername(),
-                    t.getToUsername(),
-                    String.format("$%.2f", t.getAmount()),
-                    t.getTimestamp()
-            });
-    MenuPrinter.pause();
-}
-
-private void filterByType() {
-    Refresh.refreshTerminal();
-    MenuPrinter.printHeader("FILTER BY TYPE");
-    MenuPrinter.breadcrumb("Main Menu > Transactions > Filter by Type");
-
-    MenuPrinter.printOption("1", "Deposits");
-    MenuPrinter.printOption("2", "Withdrawals");
-    MenuPrinter.printOption("3", "Transfers");
-    MenuPrinter.printOption("4", "Purchases");
-    MenuPrinter.printOption("5", "Salaries");
-    MenuPrinter.prompt("Select type");
-
-    String type = switch (scanner.nextLine().trim()) {
-        case "1" -> "DEPOSIT";
-        case "2" -> "WITHDRAW";
-        case "3" -> "TRANSFER";
-        case "4" -> "PURCHASE";
-        case "5" -> "SALARY";
-        default -> null;
-    };
-
-    if (type == null) {
-        MenuPrinter.error("Invalid selection.");
-        MenuPrinter.pause();
-        return;
-    }
-
-    List<Transaction> filtered = tm.findByType(type);
-    if (filtered.isEmpty()) {
-        MenuPrinter.info("No " + type + " transactions found.");
-        MenuPrinter.pause();
-        return;
-    }
-
-    AsciiTable.print(filtered,
-            new String[]{"ID", "From", "To", "Amount", "Description", "Date"},
-            new int[]{6, 18, 18, 10, 24, 18},
-            t -> new String[]{
-                    String.valueOf(t.getTransactionId()),
-                    t.getFromUsername(),
-                    t.getToUsername(),
-                    String.format("$%.2f", t.getAmount()),
-                    t.getDescription(),
-                    t.getTimestamp()
-            });
-    MenuPrinter.pause();
-}
-
-private void filterByUser() {
-    Refresh.refreshTerminal();
-    MenuPrinter.printHeader("FILTER BY USER");
-    MenuPrinter.breadcrumb("Main Menu > Transactions > Filter by User");
-
-    MenuPrinter.prompt("Enter User ID");
-    int userId = readInt();
-    
-    User user = userManager.findById(userId);
-    if (user == null) {
-        MenuPrinter.error("User not found.");
-        MenuPrinter.pause();
-        return;
-    }
-
-    List<Transaction> txs = tm.findByUserId(userId);
-    if (txs.isEmpty()) {
-        MenuPrinter.info("No transactions found for " + user.getFullName());
-        MenuPrinter.pause();
-        return;
-    }
-
-    System.out.println("Transactions for: " + user.getFullName() + " (ID: " + userId + ")");
-    System.out.println();
-
-    AsciiTable.print(txs,
-            new String[]{"ID", "Type", "From", "To", "Amount", "Date"},
-            new int[]{6, 10, 18, 18, 10, 18},
-            t -> new String[]{
-                    String.valueOf(t.getTransactionId()),
-                    t.getType(),
-                    t.getFromUsername(),
-                    t.getToUsername(),
-                    String.format("$%.2f", t.getAmount()),
-                    t.getTimestamp()
-            });
-    MenuPrinter.pause();
-}
-
-private void viewTransactionDetails() {
-    Refresh.refreshTerminal();
-    MenuPrinter.printHeader("TRANSACTION DETAILS");
-    MenuPrinter.breadcrumb("Main Menu > Transactions > Details");
-
-    MenuPrinter.prompt("Transaction ID");
-    int id = readInt();
-    
-    Transaction tx = tm.findById(id);
-    if (tx == null) {
-        MenuPrinter.error("Transaction not found.");
-        MenuPrinter.pause();
-        return;
-    }
-
-    System.out.println(tx.displayString());
-    MenuPrinter.pause();
-}
-
-    /* =========================================================
-                      5. MANAGE REPORTS
-     ========================================================= */
-    private void manageReports() {
         while (true) {
             Refresh.refreshTerminal();
-            MenuPrinter.printHeader("MANAGE REPORTS");
-            MenuPrinter.breadcrumb("Main Menu > Manage Reports");
-            MenuPrinter.printOption("1", "View All Reports");
-            MenuPrinter.printOption("2", "Update Report Status");
-            MenuPrinter.printOption("3", "Delete Report");
+            MenuPrinter.printHeader("TRANSACTIONS");
+            MenuPrinter.breadcrumb("Main Menu > Transactions");
+            MenuPrinter.printOption("1", "View All Transactions");
+            MenuPrinter.printOption("2", "Filter by Type");
+            MenuPrinter.printOption("3", "Filter by User");
+            MenuPrinter.printOption("4", "View Transaction Details");
             MenuPrinter.printOption("0", "<  Back");
             MenuPrinter.prompt("Enter choice");
 
             switch (scanner.nextLine().trim()) {
-                case "1" -> viewAllReports();
-                case "2" -> updateReport();
-                case "3" -> deleteReport();
+                case "1" -> viewAllTransactionsList();
+                case "2" -> filterByType();
+                case "3" -> filterByUser();
+                case "4" -> viewTransactionDetails();
                 case "0" -> { return; }
                 default  -> MenuPrinter.error("Invalid option.");
             }
         }
     }
 
-    /* --------------------------------------------------------- */
-    private void viewAllReports() {
+    private void viewAllTransactionsList() {
         Refresh.refreshTerminal();
-        MenuPrinter.printHeader("ALL REPORTS");
-        MenuPrinter.breadcrumb("Main Menu > Manage Reports > View All Reports");
+        MenuPrinter.printHeader("ALL TRANSACTIONS");
+        MenuPrinter.breadcrumb("Main Menu > Transactions > View All");
 
-        List<Report> reports = rm.findAll();
-        if (reports.isEmpty()) {
-            MenuPrinter.info("No reports found.");
+        List<Transaction> txs = tm.findAll();
+        if (txs.isEmpty()) {
+            MenuPrinter.info("No transactions found.");
             MenuPrinter.pause();
             return;
         }
 
-        AsciiTable.print(reports,
-                new String[]{"ID", "Reporter", "Reported User", "Status"},
-                new int[]{4, 16, 16, 12},
-                r -> new String[]{
-                        String.valueOf(r.getReportId()),
-                        r.getReporterName(),
-                        r.getReportedUsername(),
-                        r.getStatus()
+        AsciiTable.print(txs,
+                new String[]{"ID", "Type", "From", "To", "Amount", "Date"},
+                new int[]{6, 10, 20, 20, 12, 20},
+                t -> new String[]{
+                        String.valueOf(t.getTransactionId()),
+                        t.getType(),
+                        t.getFromUsername(),
+                        t.getToUsername(),
+                        String.format("$%.2f", t.getAmount()),
+                        t.getTimestamp()
                 });
         MenuPrinter.pause();
     }
 
-    /* --------------------------------------------------------- */
+    private void filterByType() {
+        Refresh.refreshTerminal();
+        MenuPrinter.printHeader("FILTER BY TYPE");
+        MenuPrinter.breadcrumb("Main Menu > Transactions > Filter by Type");
+
+        MenuPrinter.printOption("1", "Deposits");
+        MenuPrinter.printOption("2", "Withdrawals");
+        MenuPrinter.printOption("3", "Transfers");
+        MenuPrinter.printOption("4", "Purchases");
+        MenuPrinter.printOption("5", "Salaries");
+        MenuPrinter.prompt("Select type");
+
+        String type = switch (scanner.nextLine().trim()) {
+            case "1" -> "DEPOSIT";
+            case "2" -> "WITHDRAW";
+            case "3" -> "TRANSFER";
+            case "4" -> "PURCHASE";
+            case "5" -> "SALARY";
+            default -> null;
+        };
+
+        if (type == null) {
+            MenuPrinter.error("Invalid selection.");
+            MenuPrinter.pause();
+            return;
+        }
+
+        List<Transaction> filtered = tm.findByType(type);
+        if (filtered.isEmpty()) {
+            MenuPrinter.info("No " + type + " transactions found.");
+            MenuPrinter.pause();
+            return;
+        }
+
+        AsciiTable.print(filtered,
+                new String[]{"ID", "From", "To", "Amount", "Description", "Date"},
+                new int[]{6, 18, 18, 10, 24, 18},
+                t -> new String[]{
+                        String.valueOf(t.getTransactionId()),
+                        t.getFromUsername(),
+                        t.getToUsername(),
+                        String.format("$%.2f", t.getAmount()),
+                        t.getDescription(),
+                        t.getTimestamp()
+                });
+        MenuPrinter.pause();
+    }
+
+    private void filterByUser() {
+        Refresh.refreshTerminal();
+        MenuPrinter.printHeader("FILTER BY USER");
+        MenuPrinter.breadcrumb("Main Menu > Transactions > Filter by User");
+
+        MenuPrinter.prompt("Enter User ID");
+        int userId = readInt();
+
+        User user = userManager.findById(userId);
+        if (user == null) {
+            MenuPrinter.error("User not found.");
+            MenuPrinter.pause();
+            return;
+        }
+
+        List<Transaction> txs = tm.findByUserId(userId);
+        if (txs.isEmpty()) {
+            MenuPrinter.info("No transactions found for " + user.getFullName());
+            MenuPrinter.pause();
+            return;
+        }
+
+        System.out.println("Transactions for: " + user.getFullName() + " (ID: " + userId + ")");
+        System.out.println();
+
+        AsciiTable.print(txs,
+                new String[]{"ID", "Type", "From", "To", "Amount", "Date"},
+                new int[]{6, 10, 18, 18, 10, 18},
+                t -> new String[]{
+                        String.valueOf(t.getTransactionId()),
+                        t.getType(),
+                        t.getFromUsername(),
+                        t.getToUsername(),
+                        String.format("$%.2f", t.getAmount()),
+                        t.getTimestamp()
+                });
+        MenuPrinter.pause();
+    }
+
+    private void viewTransactionDetails() {
+        Refresh.refreshTerminal();
+        MenuPrinter.printHeader("TRANSACTION DETAILS");
+        MenuPrinter.breadcrumb("Main Menu > Transactions > Details");
+
+        MenuPrinter.prompt("Transaction ID");
+        int id = readInt();
+
+        Transaction tx = tm.findById(id);
+        if (tx == null) {
+            MenuPrinter.error("Transaction not found.");
+            MenuPrinter.pause();
+            return;
+        }
+
+        System.out.println(tx.displayString());
+        MenuPrinter.pause();
+    }
+
+    /* =========================================================
+                      5. MANAGE REPORTS
+    ========================================================= */
+    private void manageReports() {
+        while (true) {
+            Refresh.refreshTerminal();
+            MenuPrinter.printHeader("MANAGE REPORTS");
+            MenuPrinter.breadcrumb("Main Menu > Manage Reports");
+            MenuPrinter.printOption("1", "View All Reports");
+            MenuPrinter.printOption("2", "View Reports by Status");
+            MenuPrinter.printOption("3", "Update Report Status");
+            MenuPrinter.printOption("4", "Delete Report");
+            MenuPrinter.printOption("0", "<  Back");
+            MenuPrinter.prompt("Enter choice");
+
+            switch (scanner.nextLine().trim()) {
+                case "1" -> viewAllReports();
+                case "2" -> viewReportsByStatus();
+                case "3" -> updateReport();
+                case "4" -> deleteReport();
+                case "0" -> { return; }
+                default  -> MenuPrinter.error("Invalid option.");
+            }
+        }
+    }
+
+   /* ---------- View All Reports ---------- */
+private void viewAllReports() {
+    Refresh.refreshTerminal();
+    MenuPrinter.printHeader("ALL REPORTS");
+    MenuPrinter.breadcrumb("Main Menu > Manage Reports > View All Reports");
+
+    List<Report> reports = rm.findAll();
+    if (reports.isEmpty()) {
+        MenuPrinter.info("No reports found.");
+        MenuPrinter.pause();
+        return;
+    }
+
+    int[] widths = fitReportColumns(reports, false);
+    int totalWidth = Arrays.stream(widths).sum() + (widths.length - 1); // + separators
+
+    System.out.printf("Total reports: %d%n", reports.size());
+    System.out.println("┌" + "─".repeat(totalWidth) + "┐");
+
+    /* header */
+    String[] heads = {"ID", "Reporter", "Reported", "Status", "Reason"};
+    StringBuilder hb = new StringBuilder("│");
+    for (int i = 0; i < heads.length; i++) hb.append(center(heads[i], widths[i])).append("│");
+    System.out.println(hb);
+
+    System.out.println("├" + "─".repeat(totalWidth) + "┤");
+
+    /* data rows (word-wrapped) */
+    for (Report r : reports) {
+        List<String> idLines   = List.of(String.valueOf(r.getReportId()));
+        List<String> repLines  = wordWrap(r.getReporterName(), widths[1]);
+        List<String> repULines = wordWrap(r.getReportedUsername(), widths[2]);
+        List<String> stLines   = wordWrap(r.getStatus(), widths[3]);
+        List<String> reLines   = wordWrap(r.getReason(), widths[4]);
+
+        int rows = Math.max(Math.max(Math.max(idLines.size(), repLines.size()),
+                                 Math.max(repULines.size(), stLines.size())), reLines.size());
+
+        for (int line = 0; line < rows; line++) {
+            StringBuilder rb = new StringBuilder("│");
+            rb.append(pad(getLine(idLines, line), widths[0])).append("│");
+            rb.append(pad(getLine(repLines, line), widths[1])).append("│");
+            rb.append(pad(getLine(repULines, line), widths[2])).append("│");
+            rb.append(pad(getLine(stLines, line), widths[3])).append("│");
+            rb.append(pad(getLine(reLines, line), widths[4])).append("│");
+            System.out.println(rb);
+        }
+    }
+
+    System.out.println("└" + "─".repeat(totalWidth) + "┘");
+    MenuPrinter.pause();
+}
+
+/* ---------- Filter By Status ---------- */
+private void viewReportsByStatus() {
+    Refresh.refreshTerminal();
+    MenuPrinter.printHeader("FILTER REPORTS BY STATUS");
+    MenuPrinter.breadcrumb("Main Menu > Manage Reports > Filter by Status");
+    MenuPrinter.printOption("1", "Pending");
+    MenuPrinter.printOption("2", "Reviewed");
+    MenuPrinter.printOption("3", "Resolved");
+    MenuPrinter.printOption("4", "Dismissed");
+    MenuPrinter.prompt("Select status");
+
+    String status = switch (scanner.nextLine().trim()) {
+        case "1" -> Report.STATUS_PENDING;
+        case "2" -> Report.STATUS_REVIEWED;
+        case "3" -> Report.STATUS_RESOLVED;
+        case "4" -> Report.STATUS_DISMISSED;
+        default -> null;
+    };
+
+    if (status == null) {
+        MenuPrinter.error("Invalid selection.");
+        MenuPrinter.pause();
+        return;
+    }
+
+    List<Report> filtered = rm.findByStatus(status);
+    if (filtered.isEmpty()) {
+        MenuPrinter.info("No " + status + " reports found.");
+        MenuPrinter.pause();
+        return;
+    }
+
+    int[] widths = fitReportColumns(filtered, true);
+    int totalWidth = Arrays.stream(widths).sum() + (widths.length - 1);
+
+    System.out.printf("Total %s reports: %d%n", status, filtered.size());
+    System.out.println("┌" + "─".repeat(totalWidth) + "┐");
+
+    String[] heads = {"ID", "Reporter", "Reported", "Reason"};
+    StringBuilder hb = new StringBuilder("│");
+    for (int i = 0; i < heads.length; i++) hb.append(center(heads[i], widths[i])).append("│");
+    System.out.println(hb);
+
+    System.out.println("├" + "─".repeat(totalWidth) + "┤");
+
+    for (Report r : filtered) {
+        List<String> idLines   = List.of(String.valueOf(r.getReportId()));
+        List<String> repLines  = wordWrap(r.getReporterName(), widths[1]);
+        List<String> repULines = wordWrap(r.getReportedUsername(), widths[2]);
+        List<String> reLines   = wordWrap(r.getReason(), widths[3]);
+
+        int rows = Math.max(Math.max(idLines.size(), repLines.size()),
+                         Math.max(repULines.size(), reLines.size()));
+
+        for (int line = 0; line < rows; line++) {
+            StringBuilder rb = new StringBuilder("│");
+            rb.append(pad(getLine(idLines, line), widths[0])).append("│");
+            rb.append(pad(getLine(repLines, line), widths[1])).append("│");
+            rb.append(pad(getLine(repULines, line), widths[2])).append("│");
+            rb.append(pad(getLine(reLines, line), widths[3])).append("│");
+            System.out.println(rb);
+        }
+    }
+
+    System.out.println("└" + "─".repeat(totalWidth) + "┘");
+    MenuPrinter.pause();
+}
     private void updateReport() {
         Refresh.refreshTerminal();
         MenuPrinter.printHeader("UPDATE REPORT STATUS");
@@ -714,13 +807,13 @@ private void viewTransactionDetails() {
         MenuPrinter.prompt("Choose new status");
         String choice = scanner.nextLine().trim();
         String newStatus = switch (choice) {
-            case "1" -> "Pending";
-            case "2" -> "Reviewed";
-            case "3" -> "Resolved";
-            case "4" -> "Dismissed";
+            case "1" -> Report.STATUS_PENDING;
+            case "2" -> Report.STATUS_REVIEWED;
+            case "3" -> Report.STATUS_RESOLVED;
+            case "4" -> Report.STATUS_DISMISSED;
             default  -> null;
         };
-        if (newStatus == null) {
+        if (newStatus == null || !Report.isValidStatus(newStatus)) {
             MenuPrinter.error("Invalid choice.");
             MenuPrinter.pause();
             return;
@@ -731,7 +824,6 @@ private void viewTransactionDetails() {
         MenuPrinter.pause();
     }
 
-    /* --------------------------------------------------------- */
     private void deleteReport() {
         Refresh.refreshTerminal();
         MenuPrinter.printHeader("DELETE REPORT");
@@ -760,7 +852,7 @@ private void viewTransactionDetails() {
 
     /* =========================================================
                            MISC
-     ========================================================= */
+    ========================================================= */
     private boolean confirmLogout() {
         while (true) {
             MenuPrinter.prompt("Are you sure you would like to logout? (y/n)");
@@ -796,4 +888,91 @@ private void viewTransactionDetails() {
             }
         }
     }
+
+ /* return int[] {idW, reporterW, reportedW, statusW, reasonW}  (no total slot) */
+private int[] fitReportColumns(List<Report> list, boolean skipStatus) {
+    int idW = 4;
+    int reporterW = 8;      // "Reporter"
+    int reportedW = 8;      // "Reported"
+    int statusW = skipStatus ? 0 : Math.max(6, Report.STATUS_PENDING.length());
+    int reasonW = 6;        // "Reason"
+
+    /* real max widths */
+    for (Report r : list) {
+        reporterW = Math.max(reporterW, r.getReporterName().length());
+        reportedW = Math.max(reportedW, r.getReportedUsername().length());
+        if (!skipStatus) statusW = Math.max(statusW, r.getStatus().length());
+        reasonW = Math.max(reasonW, r.getReason().length());
+    }
+
+    /* cap so total <= 80 (including | separators) */
+    int total = idW + 1 + reporterW + 1 + reportedW + 1 + (skipStatus ? 0 : statusW + 1) + reasonW;
+    if (total > 80) {
+        int excess = total - 80;
+        /* shave first from reason, then usernames */
+        int shave = Math.min(excess, reasonW - 10);
+        reasonW -= shave;
+        excess -= shave;
+        if (excess > 0) {
+            shave = Math.min(excess, reporterW - 8);
+            reporterW -= shave;
+            excess -= shave;
+        }
+        if (excess > 0) {
+            shave = Math.min(excess, reportedW - 8);
+            reportedW -= shave;
+            excess -= shave;
+        }
+        if (excess > 0 && !skipStatus) {
+            shave = Math.min(excess, statusW - 6);
+            statusW -= shave;
+        }
+    }
+
+    int cols = skipStatus ? 4 : 5;
+    int[] w = new int[cols];   // **no total slot**
+    w[0] = idW;
+    w[1] = reporterW;
+    w[2] = reportedW;
+    if (!skipStatus) {
+        w[3] = statusW;
+        w[4] = reasonW;
+    } else {
+        w[3] = reasonW;
+    }
+    return w;
 }
+
+/* ---------- word-wrap that keeps whole words ---- */
+private List<String> wordWrap(String text, int width) {
+    if (text == null || text.isEmpty()) return List.of("");
+    List<String> lines = new ArrayList<>();
+    int start = 0, end;
+    while (start < text.length()) {
+        end = Math.min(start + width, text.length());
+        if (end < text.length() && text.charAt(end) != ' ') {
+            while (end > start && text.charAt(end - 1) != ' ') end--;
+            if (end == start) end = start + width; // force break long word
+        }
+        lines.add(text.substring(start, end).trim());
+        start = end;
+        while (start < text.length() && text.charAt(start) == ' ') start++;
+    }
+    return lines;
+}
+
+private String getLine(List<String> lines, int idx) {
+    return idx < lines.size() ? lines.get(idx) : "";
+}
+
+private String pad(String s, int width) {
+    if (s.length() > width) return s.substring(0, width);
+    return s + " ".repeat(width - s.length());
+}
+
+private String center(String s, int width) {
+    int pad = (width - s.length()) / 2;
+    return " ".repeat(pad) + s + " ".repeat(width - s.length() - pad);
+}
+}
+

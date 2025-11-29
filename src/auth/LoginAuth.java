@@ -36,8 +36,12 @@ public class LoginAuth extends Auth {
         case 1 -> {
             Jobseeker js = (Jobseeker) user;
             js.loadResumeFromCSV();
-            new JobseekerMenu(js, jobPostingManager, applicationManager,
-                              productManager, transactionManager, reportManager).show();
+            new JobseekerMenu(js, jobPostingManager, 
+                            applicationManager,
+                            productManager,
+                            transactionManager, 
+                            reportManager, 
+                            userManager).show();
         }
         case 2 -> new RecruiterMenu(
                     (Recruiter) user,
