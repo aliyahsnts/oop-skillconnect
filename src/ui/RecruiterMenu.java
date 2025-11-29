@@ -51,6 +51,11 @@ public class RecruiterMenu {
             MenuPrinter.printOption("3", "Update Job Posting");
             MenuPrinter.printOption("4", "Delete Job Posting");
             MenuPrinter.printOption("5", "View Applicants for a Job");
+            MenuPrinter.printOption("6", "Deposit Funds");
+            MenuPrinter.printOption("7", "Withdraw Funds");
+            MenuPrinter.printOption("8", "Send Salary to Jobseeker");
+            MenuPrinter.printOption("9", "Purchase Product");
+            MenuPrinter.printOption("10", "View Transaction History");
             MenuPrinter.printOption("0", "<  Logout");
             MenuPrinter.prompt("Enter choice");
 
@@ -60,6 +65,11 @@ public class RecruiterMenu {
                 case "3" -> updateJobPosting();
                 case "4" -> deleteJobPosting();
                 case "5" -> viewApplicantsByJob();
+                case "6" -> depositFunds();
+                case "7" -> withdrawFunds();
+                case "8" -> sendSalary();
+                case "9" -> purchaseProduct();
+                case "10" -> viewTransactions();
                 case "0" -> {
                     MenuPrinter.info("Logging out...");
                     return;
@@ -284,13 +294,13 @@ public class RecruiterMenu {
         MenuPrinter.pause();
     }
 
-    /* =========================================================
-                           HELPERS
-     ========================================================= */
 
+        /* ====================  FINANCIAL OPERATIONS  ==================== */
+
+     
     private void depositFunds() {
         System.out.println("\n--- Deposit Funds ---");
-        System.out.println("DEBUG: Balance BEFORE deposit: ₱" + um.getBalance(recruiter.getId())); // ADD THIS
+        System.out.println("Balance BEFORE deposit: ₱" + um.getBalance(recruiter.getId())); // ADD THIS
         System.out.print("Enter amount to deposit (₱): ");
         double amount = readDouble();
         if (amount <= 0) {
@@ -371,76 +381,97 @@ public class RecruiterMenu {
 
     // Purchase product as recruiter
     private void purchaseProduct() {
-        System.out.println("\n--- Purchase Product ---");
-        List<Product> products = pm.findAll();
-        if (products == null || products.isEmpty()) {
-            System.out.println("No products available.");
-            return;
-        }
-
-        for (Product p : products) {
-            System.out.println(p.displayString());
-            System.out.println("-------------------------------------");
-        }
-
-        System.out.print("Enter Product ID to purchase: ");
-        int pid = readInt();
-        Product product = pm.findById(pid);
-        if (product == null) {
-            System.out.println("ERROR: Product not found.");
-            return;
-        }
-
-        System.out.print("Enter quantity: ");
-        int qty = readInt();
-        if (qty <= 0) {
-            System.out.println("ERROR: Quantity must be positive.");
-            return;
-        }
-
-        double total = product.getPrice() * qty;
-        double balance = um.getBalance(recruiter.getId());
-        if (balance < total) {
-            System.out.println("ERROR: Insufficient funds. Current balance: ₱" + balance);
-            return;
-        }
-
-        // Debit recruiter balance first to ensure atomic behavior
-        boolean adjusted = um.adjustBalance(recruiter.getId(), -total);
-        if (!adjusted) {
-            System.out.println("ERROR: Failed to deduct balance; purchase aborted.");
-            return;
-        }
-
-        // Record transaction (store negative amount to reflect debit)
-        boolean recorded = tm.recordPurchase(
-            recruiter.getId(),
-            recruiter.getFullName(),
-            product.getProductId(),
-            product.getProductName(),
-            qty,
-            total); // Note: Pass the POSITIVE total here.
-
-        if (!recorded) {
-            System.out.println("ERROR: Failed to record purchase transaction.");
-        }
-
-        System.out.println("SUCCESS: Purchased " + qty + " x " + product.getProductName() + " for $" + total + ".");
+    Refresh.refreshTerminal();
+    MenuPrinter.printHeader("PURCHASE PRODUCT");
+    MenuPrinter.breadcrumb("Main Menu > Purchase Product");
+    
+    List<Product> products = pm.findAll();
+    if (products == null || products.isEmpty()) {
+        MenuPrinter.info("No products available.");
+        System.out.print("\nPress ENTER to continue...");
+        scanner.nextLine();
+        return;
     }
 
+    System.out.println();
+    for (Product p : products) {
+        System.out.println(p.displayString());
+        System.out.println("-------------------------------------");
+    }
+
+    MenuPrinter.prompt("Enter Product ID to purchase (0 to cancel)");
+    int pid = readInt();
+    if (pid == 0) return;
+    
+    Product product = pm.findById(pid);
+    if (product == null) {
+        MenuPrinter.error("Product not found.");
+        System.out.print("\nPress ENTER to continue...");
+        scanner.nextLine();
+        return;
+    }
+
+    MenuPrinter.prompt("Enter quantity");
+    int qty = readInt();
+    if (qty <= 0) {
+        MenuPrinter.error("Quantity must be positive.");
+        System.out.print("\nPress ENTER to continue...");
+        scanner.nextLine();
+        return;
+    }
+
+    double total = product.getPrice() * qty;
+    double balance = um.getBalance(recruiter.getId());
+    if (balance < total) {
+        MenuPrinter.error("Insufficient funds. Current balance: ₱" + balance);
+        System.out.print("\nPress ENTER to continue...");
+        scanner.nextLine();
+        return;
+    }
+
+    // Debit recruiter balance first to ensure atomic behavior
+    boolean adjusted = um.adjustBalance(recruiter.getId(), -total);
+    if (!adjusted) {
+        MenuPrinter.error("Failed to deduct balance; purchase aborted.");
+        System.out.print("\nPress ENTER to continue...");
+        scanner.nextLine();
+        return;
+    }
+
+    // Record transaction
+    boolean recorded = tm.recordPurchase(
+        recruiter.getId(),
+        recruiter.getFullName(),
+        product.getProductId(),
+        product.getProductName(),
+        qty,
+        total);
+
+    if (!recorded) {
+        MenuPrinter.error("Failed to record purchase transaction.");
+    }
+
+    MenuPrinter.success("Purchased " + qty + " x " + product.getProductName() + " for $" + total + ".");
+    System.out.print("\nPress ENTER to continue...");
+    scanner.nextLine();
+}
     // View transaction history for recruiter
     private void viewTransactions() {
-        System.out.println("\n--- Transaction History ---");
-        List<Transaction> txs = tm.findByUserId(recruiter.getId());
-        if (txs == null || txs.isEmpty()) {
-            System.out.println("No transactions found.");
-            return;
-        }
-        for (Transaction tx : txs) {
-            System.out.println(tx.displayString());
-            System.out.println("-------------------------------------");
-        }
+    System.out.println("\n--- Transaction History ---");
+    List<Transaction> txs = tm.findByUserId(recruiter.getId());
+    if (txs == null || txs.isEmpty()) {
+        System.out.println("No transactions found.");
+        System.out.print("\nPress ENTER to continue...");
+        scanner.nextLine();  // Use the SAME scanner from your class
+        return;
     }
+    for (Transaction tx : txs) {
+        System.out.println(tx.displayString());
+        System.out.println("-------------------------------------");
+    }
+    System.out.print("\nPress ENTER to continue...");
+    scanner.nextLine();  // Use the SAME scanner from your class
+}
 
     /* =========================================================
                            HELPERS
